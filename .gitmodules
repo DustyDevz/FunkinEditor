@@ -1,0 +1,3 @@
+[submodule "funkin/external/DiligentEngine"]
+	path = funkin/external/DiligentEngine
+	url = https://github.com/DiligentGraphics/DiligentEngine.git
