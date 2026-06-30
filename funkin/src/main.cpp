@@ -1,3 +1,11 @@
+/*
+ * FunkinC++ Engine
+ * Copyright (©) 2026 Dusty. All rights reserved.
+ *
+ * This project is licensed under the terms of the MIT license.
+ * For a copy, see <https://opensource.org/licenses/MIT>.
+*/
+
 #include <iostream>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
