@@ -10,8 +10,11 @@ project(FunkinC__ VERSION 0.0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/export/$<CONFIG>")
-
 set(DILIGENT_BUILD_CORE_COMBINED_LIB OFF CACHE BOOL "Disables combined library generation" FORCE)
+
+if(WIN32)
+    add_compile_definitions(_WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A00000C)
+endif()
 
 file(GLOB_RECURSE ENGINE_SOURCES
         "funkin/src/*.cpp"
@@ -20,8 +23,13 @@ file(GLOB_RECURSE ENGINE_SOURCES
 
 add_subdirectory("funkin/external/DiligentEngine")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+if(WIN32 AND TARGET Diligent-Win32Platform)
+    target_compile_options(Diligent-Win32Platform PRIVATE
+            -include "${CMAKE_SOURCE_DIR}/funkin/cmake/compat/win32_thread_desc_compat.h"
+    )
+endif()
 
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 add_executable(FunkinC__ ${ENGINE_SOURCES})
 
 target_link_libraries(FunkinC__ PRIVATE
@@ -35,8 +43,8 @@ target_link_libraries(FunkinC__ PRIVATE
         Diligent-GraphicsEngine
         Diligent-Primitives
 )
-target_include_directories(FunkinC__ PRIVATE "${CMAKE_SOURCE_DIR}/funkin/include")
 
+target_include_directories(FunkinC__ PRIVATE "${CMAKE_SOURCE_DIR}/funkin/include")
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "C:/Qt/6.11.1/mingw_64/bin")
 
 if(WINDEPLOYQT_EXECUTABLE)
