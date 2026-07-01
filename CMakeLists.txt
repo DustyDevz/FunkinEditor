@@ -16,9 +16,16 @@ if(WIN32)
     add_compile_definitions(_WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A00000C)
 endif()
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+endif()
+
 file(GLOB_RECURSE ENGINE_SOURCES
         "funkin/src/*.cpp"
         "funkin/include/*.hpp"
+        "funkin/qt/qrc/*.qrc"
 )
 
 add_subdirectory("funkin/external/DiligentEngine")
@@ -31,6 +38,10 @@ endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 add_executable(FunkinC__ ${ENGINE_SOURCES})
+set_target_properties(FunkinC__ PROPERTIES
+        AUTOMOC ON
+        AUTORCC ON
+)
 
 target_link_libraries(FunkinC__ PRIVATE
         Qt6::Core

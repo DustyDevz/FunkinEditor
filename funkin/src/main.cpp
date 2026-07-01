@@ -6,17 +6,21 @@
  * For a copy, see <https://opensource.org/licenses/MIT>.
 */
 
-#include <iostream>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include "render/render_viewport.hpp"
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
+    qmlRegisterType<Funkin::Render::RenderViewport>("Funkin.Render", 1, 0, "RenderViewport");
     QQmlApplicationEngine engine;
 
-    QString qmlPath = QCoreApplication::applicationDirPath() + "/test.qml";
-    engine.load(QUrl::fromLocalFile(qmlPath));
+    const QUrl url(QStringLiteral("qrc:/main/main.qml"));
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+        &app, []() { QCoreApplication::exit(-1); },
+        Qt::QueuedConnection);
 
-    std::cout << "Test" << std::endl;
+    engine.load(url);
+
     return app.exec();
 }
