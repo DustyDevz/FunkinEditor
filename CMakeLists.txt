@@ -18,8 +18,9 @@ endif()
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    message(STATUS "ccache hooked successfully.")
 endif()
 
 file(GLOB_RECURSE ENGINE_SOURCES
@@ -27,6 +28,14 @@ file(GLOB_RECURSE ENGINE_SOURCES
         "funkin/include/*.hpp"
         "funkin/qt/qrc/*.qrc"
 )
+
+set(DILIGENT_BUILD_TOOLS OFF CACHE BOOL "Build DiligentTools module" FORCE)
+set(DILIGENT_BUILD_FX OFF CACHE BOOL "Build DiligentFX module" FORCE)
+set(DILIGENT_BUILD_SAMPLES OFF CACHE BOOL "Build DiligentSamples module" FORCE)
+set(DILIGENT_NO_GLSLANG ON CACHE BOOL "Disable GLSLANG" FORCE)
+set(DILIGENT_NO_HLSL ON CACHE BOOL "Disable HLSL" FORCE)
+set(DILIGENT_SUPPORT_D3D11 OFF CACHE BOOL "" FORCE)
+set(DILIGENT_SUPPORT_D3D12 OFF CACHE BOOL "" FORCE)
 
 add_subdirectory("funkin/external/DiligentEngine")
 
@@ -37,10 +46,17 @@ if(WIN32 AND TARGET Diligent-Win32Platform)
 endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Vulkan REQUIRED)
+
 add_executable(FunkinC__ ${ENGINE_SOURCES})
 set_target_properties(FunkinC__ PROPERTIES
         AUTOMOC ON
         AUTORCC ON
+)
+
+target_compile_definitions(FunkinC__ PRIVATE
+        $<$<CONFIG:Debug>:FUNKIN_DEBUG>
+        VK_USE_PLATFORM_WIN32_KHR
 )
 
 target_link_libraries(FunkinC__ PRIVATE
@@ -48,6 +64,7 @@ target_link_libraries(FunkinC__ PRIVATE
         Qt6::Gui
         Qt6::Qml
         Qt6::Quick
+        Vulkan::Vulkan
         Diligent-GraphicsEngineOpenGL-static
         Diligent-GraphicsEngineVk-static
         Diligent-GraphicsTools
@@ -62,5 +79,14 @@ if(WINDEPLOYQT_EXECUTABLE)
     add_custom_command(TARGET FunkinC__ POST_BUILD
             COMMAND ${WINDEPLOYQT_EXECUTABLE} --qmldir "${CMAKE_SOURCE_DIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_FILE_NAME:FunkinC__>"
             COMMENT "Deploying Qt dependencies"
+    )
+    get_filename_component(COMPILER_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    add_custom_command(TARGET FunkinC__ POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${COMPILER_BIN_DIR}/libstdc++-6.dll"
+            "${COMPILER_BIN_DIR}/libgcc_s_seh-1.dll"
+            "${COMPILER_BIN_DIR}/libwinpthread-1.dll"
+            "$<TARGET_FILE_DIR:FunkinC__>"
+            COMMENT "Overriding runtime DLLs with matching compiler toolchain"
     )
 endif()

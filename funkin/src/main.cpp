@@ -8,10 +8,13 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQuickWindow>
+
 #include "render/render_viewport.hpp"
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
     qmlRegisterType<Funkin::Render::RenderViewport>("Funkin.Render", 1, 0, "RenderViewport");
     QQmlApplicationEngine engine;
 

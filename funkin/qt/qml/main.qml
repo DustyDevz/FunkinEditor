@@ -7,12 +7,12 @@ Window {
     height: 720
     visible: true
     title: "FunkinC++ Editor"
-	
+
     RenderViewport {
         id: gameViewport
         anchors.fill: parent
     }
-	
+
     Text {
         text: "FPS: 60"
         color: "white"
