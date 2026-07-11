@@ -6,18 +6,30 @@ Window {
     width: 1280
     height: 720
     visible: true
-    title: "FunkinC++ Editor"
 
     RenderViewport {
-        id: gameViewport
+        id: viewport
         anchors.fill: parent
+
+        Component.onCompleted: {
+            viewport.init()
+        }
     }
 
-    Text {
-        text: "FPS: 60"
-        color: "white"
+    Column {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.margins: 10
+        spacing: 5
+
+        Text {
+            text: "FPS: " + Debug.fps
+            color: "white"
+        }
+
+        Text {
+            text: "Memory: " + Debug.memoryUsage.toFixed(2) + " MB"
+            color: "white"
+        }
     }
 }

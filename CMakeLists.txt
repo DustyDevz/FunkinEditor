@@ -10,11 +10,6 @@ project(FunkinC__ VERSION 0.0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/export/$<CONFIG>")
-set(DILIGENT_BUILD_CORE_COMBINED_LIB OFF CACHE BOOL "Disables combined library generation" FORCE)
-
-if(WIN32)
-    add_compile_definitions(_WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A00000C)
-endif()
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
@@ -29,15 +24,7 @@ file(GLOB_RECURSE ENGINE_SOURCES
         "funkin/qt/qrc/*.qrc"
 )
 
-set(DILIGENT_BUILD_TOOLS OFF CACHE BOOL "Build DiligentTools module" FORCE)
-set(DILIGENT_BUILD_FX OFF CACHE BOOL "Build DiligentFX module" FORCE)
-set(DILIGENT_BUILD_SAMPLES OFF CACHE BOOL "Build DiligentSamples module" FORCE)
-set(DILIGENT_NO_GLSLANG ON CACHE BOOL "Disable GLSLANG" FORCE)
-set(DILIGENT_NO_HLSL ON CACHE BOOL "Disable HLSL" FORCE)
-set(DILIGENT_SUPPORT_D3D11 OFF CACHE BOOL "" FORCE)
-set(DILIGENT_SUPPORT_D3D12 OFF CACHE BOOL "" FORCE)
-
-add_subdirectory("funkin/external/DiligentEngine")
+add_subdirectory("funkin/libs/bgfx")
 
 if(WIN32 AND TARGET Diligent-Win32Platform)
     target_compile_options(Diligent-Win32Platform PRIVATE

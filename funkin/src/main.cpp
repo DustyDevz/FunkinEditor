@@ -8,15 +8,17 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QQuickWindow>
-
-#include "render/render_viewport.hpp"
+#include "app/debug.hpp"
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
-    qmlRegisterType<Funkin::Render::RenderViewport>("Funkin.Render", 1, 0, "RenderViewport");
+
     QQmlApplicationEngine engine;
+    Funkin::App::Debug* debug = new Funkin::App::Debug(&app);
+    engine.rootContext()->setContextProperty("Debug", debug);
 
     const QUrl url(QStringLiteral("qrc:/main/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
@@ -24,6 +26,5 @@ int main(int argc, char* argv[]) {
         Qt::QueuedConnection);
 
     engine.load(url);
-
     return app.exec();
 }
