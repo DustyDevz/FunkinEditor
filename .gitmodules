@@ -1,21 +1,15 @@
-[submodule "funkin/external/DiligentEngine"]
-	path = funkin/external/DiligentEngine
-	url = https://github.com/DiligentGraphics/DiligentEngine.git
-[submodule "bgfx"]
-	path = bgfx
-	url = https://github.com/bkaradzic/bgfx
-[submodule "funkin/3rdparty/bx"]
-	path = funkin/3rdparty/bx
-	url = https://github.com/bkaradzic/bx.git
-[submodule "funkin/3rdparty/bimg"]
-	path = funkin/3rdparty/bimg
-	url = https://github.com/bkaradzic/bimg.git
-[submodule "funkin/3rdparty/bgfx"]
-	path = funkin/3rdparty/bgfx
-	url = https://github.com/bkaradzic/bgfx.git
-[submodule "funkin/3rdparty/json"]
-	path = funkin/3rdparty/json
+[submodule "funkin/libs/imgui"]
+	path = funkin/libs/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "funkin/libs/json"]
+	path = funkin/libs/json
 	url = https://github.com/nlohmann/json
-[submodule "funkin/3rdparty/imgui"]
-	path = funkin/3rdparty/imgui
-	url = https://github.com/ocornut/imgui
+[submodule "funkin/libs/bx"]
+	path = funkin/libs/bx
+	url = https://github.com/bkaradzic/bx.git
+[submodule "funkin/libs/bimg"]
+	path = funkin/libs/bimg
+	url = https://github.com/bkaradzic/bimg.git
+[submodule "funkin/libs/bgfx"]
+	path = funkin/libs/bgfx
+	url = https://github.com/bkaradzic/bgfx.git
