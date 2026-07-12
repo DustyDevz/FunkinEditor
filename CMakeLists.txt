@@ -38,7 +38,7 @@ file(GLOB_RECURSE ENGINE_SOURCES
 
 add_subdirectory("funkin/libs/bgfx")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick OpenGL)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 find_package(Vulkan REQUIRED)
 
 add_executable(FunkinEditor ${ENGINE_SOURCES})
@@ -57,7 +57,6 @@ target_link_libraries(FunkinEditor PRIVATE
         Qt6::Gui
         Qt6::Qml
         Qt6::Quick
-        Qt6::OpenGL
         Vulkan::Vulkan
         bgfx
 )
