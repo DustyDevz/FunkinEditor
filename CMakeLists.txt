@@ -26,12 +26,6 @@ file(GLOB_RECURSE ENGINE_SOURCES
 
 add_subdirectory("funkin/libs/bgfx")
 
-if(WIN32 AND TARGET Diligent-Win32Platform)
-    target_compile_options(Diligent-Win32Platform PRIVATE
-            -include "${CMAKE_SOURCE_DIR}/funkin/cmake/compat/win32_thread_desc_compat.h"
-    )
-endif()
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 find_package(Vulkan REQUIRED)
 
@@ -52,11 +46,7 @@ target_link_libraries(FunkinEditor PRIVATE
         Qt6::Qml
         Qt6::Quick
         Vulkan::Vulkan
-        Diligent-GraphicsEngineOpenGL-static
-        Diligent-GraphicsEngineVk-static
-        Diligent-GraphicsTools
-        Diligent-GraphicsEngine
-        Diligent-Primitives
+        bgfx
 )
 
 target_include_directories(FunkinEditor PRIVATE "${CMAKE_SOURCE_DIR}/funkin/include")
@@ -65,7 +55,6 @@ find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "C:/Qt/6.11.1/mingw_64/bin
 if(WINDEPLOYQT_EXECUTABLE)
     add_custom_command(TARGET FunkinEditor POST_BUILD
             COMMAND ${WINDEPLOYQT_EXECUTABLE} --qmldir "${CMAKE_SOURCE_DIR}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_FILE_NAME:FunkinEditor>"
-            COMMENT "Deploying Qt dependencies"
     )
     get_filename_component(COMPILER_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
     add_custom_command(TARGET FunkinEditor POST_BUILD
@@ -74,6 +63,5 @@ if(WINDEPLOYQT_EXECUTABLE)
             "${COMPILER_BIN_DIR}/libgcc_s_seh-1.dll"
             "${COMPILER_BIN_DIR}/libwinpthread-1.dll"
             "$<TARGET_FILE_DIR:FunkinEditor>"
-            COMMENT "Overriding runtime DLLs with matching compiler toolchain"
     )
 endif()
