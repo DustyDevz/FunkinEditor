@@ -7,7 +7,6 @@
 */
 
 #pragma once
-#include <bgfx/bgfx.h>
 #include <cstdint>
 
 namespace Funkin::Render::GFX {

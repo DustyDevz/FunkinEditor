@@ -7,3 +7,6 @@
 [submodule "funkin/libs/bgfx"]
 	path = funkin/libs/bgfx
 	url = https://github.com/bkaradzic/bgfx.cmake
+[submodule "funkin/libs/clay"]
+	path = funkin/libs/clay
+	url = https://github.com/nicbarker/clay.git
