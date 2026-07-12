@@ -6,4 +6,4 @@
 	url = https://github.com/nlohmann/json
 [submodule "funkin/libs/bgfx"]
 	path = funkin/libs/bgfx
-	url = https://github.com/bkaradzic/bgfx.cmake.git
+	url = https://github.com/bkaradzic/bgfx.cmake
