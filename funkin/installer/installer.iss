@@ -154,6 +154,57 @@ begin
   ShellExec('open', 'https://aka.ms/vs/17/release/vc_redist.x64.exe', '', '', SW_SHOWNORMAL, ewNoWait, ResultCode);
 end;
 
+function ShowRedistNotDetectedDialog: Boolean;
+var
+  Frm: TForm;
+  MsgLabel: TNewStaticText;
+  DownloadBtn, OkBtn: TNewButton;
+begin
+  Frm := TForm.Create(nil);
+  Frm.ClientWidth := ScaleX(380);
+  Frm.ClientHeight := ScaleY(140);
+  Frm.Caption := 'Redistributable Not Detected';
+  Frm.Position := poScreenCenter;
+  Frm.BorderStyle := bsDialog;
+ 
+  MsgLabel := TNewStaticText.Create(Frm);
+  MsgLabel.Parent := Frm;
+  MsgLabel.Left := ScaleX(16);
+  MsgLabel.Top := ScaleY(16);
+  MsgLabel.Width := Frm.ClientWidth - ScaleX(32);
+  MsgLabel.Height := ScaleY(70);
+  MsgLabel.AutoSize := False;
+  MsgLabel.WordWrap := True;
+  MsgLabel.Caption :=
+    'The Visual C++ Redistributable still isn''t detected.' + #13#10#13#10 +
+    'If you haven''t downloaded it yet, click Download. Otherwise, click OK and try Check again once it finishes installing.';
+ 
+  //BtnResult := 0;
+ 
+  DownloadBtn := TNewButton.Create(Frm);
+  DownloadBtn.Parent := Frm;
+  DownloadBtn.Caption := 'Download';
+  DownloadBtn.Width := ScaleX(100);
+  DownloadBtn.Height := ScaleY(28);
+  DownloadBtn.Left := Frm.ClientWidth - ScaleX(220);
+  DownloadBtn.Top := Frm.ClientHeight - ScaleY(44);
+  DownloadBtn.ModalResult := mrYes;
+ 
+  OkBtn := TNewButton.Create(Frm);
+  OkBtn.Parent := Frm;
+  OkBtn.Caption := 'OK';
+  OkBtn.Width := ScaleX(100);
+  OkBtn.Height := ScaleY(28);
+  OkBtn.Left := Frm.ClientWidth - ScaleX(110);
+  OkBtn.Top := Frm.ClientHeight - ScaleY(44);
+  OkBtn.ModalResult := mrOk;
+ 
+  Frm.ActiveControl := OkBtn;
+ 
+  Result := (Frm.ShowModal = mrYes);
+  Frm.Free;
+end;
+
 procedure InitializeWizard;
 var
   Maintenance: Boolean;
@@ -315,9 +366,8 @@ begin
     begin
       if VCRedistNeedsInstall then
       begin
-        MsgBox('The Visual C++ Redistributable still isn''t detected. ' +
-               'Make sure the download finished installing, then click Check again.',
-               mbInformation, MB_OK);
+        if ShowRedistNotDetectedDialog then
+          DownloadButtonClick(nil);
         Result := False;
         Exit;
       end
