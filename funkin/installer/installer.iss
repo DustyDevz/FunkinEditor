@@ -54,13 +54,17 @@ Filename: "{app}\FunkinEditor.exe"; Description: "{cm:LaunchProgram,FunkinEditor
 Type: filesandordirs; Name: "{app}"
 
 [Code]
+function GetTickCount: DWORD; external 'GetTickCount@kernel32.dll stdcall';
+
 var
   OptionPage: TWizardPage;
   InstallRadio, RemoveRadio, RepairRadio: TRadioButton;
   CopyrightLabel: TLabel;
   LicenseCheck: TNewCheckBox;
   AllowSilentExit: Boolean;
-
+  RequiredSpaceLabel, AvailableSpaceLabel, TimeRemainingLabel: TLabel;
+  InstallStartTime: DWORD;
+  
 function IsMaintenanceMode: Boolean;
 var
   FoundHKCU, FoundHKLM: Boolean;
@@ -90,6 +94,81 @@ begin
   end;
 end;
 
+function FormatBytes(Bytes: Int64): String;
+var
+  GBVal: Extended;
+begin
+  if Bytes >= (1024 * 1024 * 1024) then
+  begin
+    GBVal := Bytes / (1024 * 1024 * 1024);
+    Result := Format('%.2f GB', [GBVal]);
+  end
+  else
+  begin
+    Result := Format('%d MB', [Bytes div (1024 * 1024)]);
+  end;
+end;
+
+function FormatSeconds(Seconds: Int64): String;
+var
+  Mins, Secs: Int64;
+begin
+  if Seconds < 0 then
+    Seconds := 0;
+  Mins := Seconds div 60;
+  Secs := Seconds mod 60;
+  if Mins > 0 then
+    Result := Format('%d min %d sec remaining', [Mins, Secs])
+  else
+    Result := Format('%d sec remaining', [Secs]);
+end;
+ 
+function GetFreeSpaceText: String;
+var
+  FreeBytes, TotalBytes: Int64;
+  DriveRoot: String;
+begin
+  DriveRoot := ExtractFileDrive(ExpandConstant('{localappdata}')) + '\';
+  if GetSpaceOnDisk64(DriveRoot, FreeBytes, TotalBytes) then
+    Result := FormatBytes(FreeBytes) + ' free on ' + DriveRoot
+  else
+    Result := 'Unknown';
+end;
+
+procedure CurInstallProgressChanged(CurProgress, MaxProgress: Integer);
+var
+  ElapsedMs: DWORD;
+  PercentDone: Double;
+  EstTotalMs, EstRemainMs: Int64;
+begin
+  if TimeRemainingLabel = nil then
+    Exit;
+ 
+  if CurProgress <= 0 then
+  begin
+    InstallStartTime := GetTickCount;
+    TimeRemainingLabel.Caption := 'Estimating time remaining...';
+    Exit;
+  end;
+ 
+  ElapsedMs := GetTickCount - InstallStartTime;
+  if MaxProgress <= 0 then
+  begin
+    TimeRemainingLabel.Caption := 'Estimating time remaining...';
+    Exit;
+  end;
+  PercentDone := CurProgress / MaxProgress;
+ 
+  if PercentDone > 0.02 then
+  begin
+    EstTotalMs := Round(ElapsedMs / PercentDone);
+    EstRemainMs := EstTotalMs - ElapsedMs;
+    TimeRemainingLabel.Caption := FormatSeconds(EstRemainMs div 1000);
+  end
+  else
+    TimeRemainingLabel.Caption := 'Estimating time remaining...';
+end;
+
 procedure CreateCopyrightLabel(ParentForm: TSetupForm);
 begin
   CopyrightLabel := TLabel.Create(ParentForm);
@@ -108,9 +187,19 @@ begin
 end;
 
 procedure InitializeWizard;
+var
+  Maintenance: Boolean;
 begin
   AllowSilentExit := False;
   CreateCopyrightLabel(WizardForm);
+  
+  TimeRemainingLabel := TLabel.Create(WizardForm);
+  TimeRemainingLabel.Parent := WizardForm.InstallingPage;
+  TimeRemainingLabel.Caption := '';
+  TimeRemainingLabel.Left := WizardForm.ProgressGauge.Left;
+  TimeRemainingLabel.Top := WizardForm.ProgressGauge.Top + WizardForm.ProgressGauge.Height + ScaleY(8);
+  TimeRemainingLabel.Width := WizardForm.ProgressGauge.Width;
+  TimeRemainingLabel.Font.Color := clGray;
 
   WizardForm.LicenseAcceptedRadio.Visible := False;
   WizardForm.LicenseNotAcceptedRadio.Visible := False;
@@ -130,6 +219,8 @@ begin
 
   OptionPage := CreateCustomPage(wpLicense, 'Setup Options', 'Select the action you want to perform.');
 
+  Maintenance := IsMaintenanceMode;
+
   InstallRadio := TRadioButton.Create(OptionPage);
   InstallRadio.Parent := OptionPage.Surface;
   InstallRadio.Caption := 'Install';
@@ -142,12 +233,28 @@ begin
   RemoveRadio.Caption := 'Remove';
   RemoveRadio.Top := ScaleY(50);
   RemoveRadio.Width := OptionPage.SurfaceWidth;
+  RemoveRadio.Enabled := Maintenance;
 
   RepairRadio := TRadioButton.Create(OptionPage);
   RepairRadio.Parent := OptionPage.Surface;
   RepairRadio.Caption := 'Repair';
   RepairRadio.Top := ScaleY(80);
   RepairRadio.Width := OptionPage.SurfaceWidth;
+  RepairRadio.Enabled := Maintenance;
+ 
+  RequiredSpaceLabel := TLabel.Create(OptionPage);
+  RequiredSpaceLabel.Parent := OptionPage.Surface;
+  RequiredSpaceLabel.Caption := 'Space required: ' + WizardForm.DiskSpaceLabel.Caption;
+  RequiredSpaceLabel.Top := ScaleY(120);
+  RequiredSpaceLabel.Width := OptionPage.SurfaceWidth;
+  RequiredSpaceLabel.Font.Color := clGray;
+ 
+  AvailableSpaceLabel := TLabel.Create(OptionPage);
+  AvailableSpaceLabel.Parent := OptionPage.Surface;
+  AvailableSpaceLabel.Caption := 'Space available: ' + GetFreeSpaceText;
+  AvailableSpaceLabel.Top := ScaleY(140);
+  AvailableSpaceLabel.Width := OptionPage.SurfaceWidth;
+  AvailableSpaceLabel.Font.Color := clGray;
 end;
 
 procedure InitializeUninstallProgressForm;
@@ -168,11 +275,6 @@ end;
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   Result := False;
-  if not IsMaintenanceMode then
-  begin
-    if PageID = OptionPage.ID then
-      Result := True;
-  end;
 
   if IsMaintenanceMode and (PageID = wpSelectTasks) then
   begin
@@ -230,11 +332,6 @@ begin
           MsgBox('Failed to launch the uninstaller. Please try running it manually.', mbCriticalError, MB_OK);
           Result := False;
         end;
-      end
-      else
-      begin
-        MsgBox('Could not find the uninstaller path in the registry.', mbCriticalError, MB_OK);
-        Result := False;
       end;
     end;
   end;
