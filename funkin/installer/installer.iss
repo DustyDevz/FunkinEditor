@@ -30,6 +30,8 @@ UninstallDisplayIcon={app}\icon.ico
 
 [Messages]
 LicenseLabel3=
+SetupAppTitle=FunkinEditor - Setup
+SetupWindowTitle=FunkinEditor - Setup
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a Desktop shortcut"; GroupDescription: "{cm:AdditionalIcons}"; Check: IsInstallOrRepairSelected
@@ -54,16 +56,13 @@ Filename: "{app}\FunkinEditor.exe"; Description: "{cm:LaunchProgram,FunkinEditor
 Type: filesandordirs; Name: "{app}"
 
 [Code]
-function GetTickCount: DWORD; external 'GetTickCount@kernel32.dll stdcall';
-
 var
   OptionPage: TWizardPage;
   InstallRadio, RemoveRadio, RepairRadio: TRadioButton;
   CopyrightLabel: TLabel;
   LicenseCheck: TNewCheckBox;
   AllowSilentExit: Boolean;
-  RequiredSpaceLabel, AvailableSpaceLabel, TimeRemainingLabel: TLabel;
-  InstallStartTime: DWORD;
+  RequiredSpaceLabel, AvailableSpaceLabel, StatusLabel: TLabel;
   
 function IsMaintenanceMode: Boolean;
 var
@@ -108,20 +107,6 @@ begin
     Result := Format('%d MB', [Bytes div (1024 * 1024)]);
   end;
 end;
-
-function FormatSeconds(Seconds: Int64): String;
-var
-  Mins, Secs: Int64;
-begin
-  if Seconds < 0 then
-    Seconds := 0;
-  Mins := Seconds div 60;
-  Secs := Seconds mod 60;
-  if Mins > 0 then
-    Result := Format('%d min %d sec remaining', [Mins, Secs])
-  else
-    Result := Format('%d sec remaining', [Secs]);
-end;
  
 function GetFreeSpaceText: String;
 var
@@ -133,40 +118,6 @@ begin
     Result := FormatBytes(FreeBytes) + ' free on ' + DriveRoot
   else
     Result := 'Unknown';
-end;
-
-procedure CurInstallProgressChanged(CurProgress, MaxProgress: Integer);
-var
-  ElapsedMs: DWORD;
-  PercentDone: Double;
-  EstTotalMs, EstRemainMs: Int64;
-begin
-  if TimeRemainingLabel = nil then
-    Exit;
- 
-  if CurProgress <= 0 then
-  begin
-    InstallStartTime := GetTickCount;
-    TimeRemainingLabel.Caption := 'Estimating time remaining...';
-    Exit;
-  end;
- 
-  ElapsedMs := GetTickCount - InstallStartTime;
-  if MaxProgress <= 0 then
-  begin
-    TimeRemainingLabel.Caption := 'Estimating time remaining...';
-    Exit;
-  end;
-  PercentDone := CurProgress / MaxProgress;
- 
-  if PercentDone > 0.02 then
-  begin
-    EstTotalMs := Round(ElapsedMs / PercentDone);
-    EstRemainMs := EstTotalMs - ElapsedMs;
-    TimeRemainingLabel.Caption := FormatSeconds(EstRemainMs div 1000);
-  end
-  else
-    TimeRemainingLabel.Caption := 'Estimating time remaining...';
 end;
 
 procedure CreateCopyrightLabel(ParentForm: TSetupForm);
@@ -193,13 +144,13 @@ begin
   AllowSilentExit := False;
   CreateCopyrightLabel(WizardForm);
   
-  TimeRemainingLabel := TLabel.Create(WizardForm);
-  TimeRemainingLabel.Parent := WizardForm.InstallingPage;
-  TimeRemainingLabel.Caption := '';
-  TimeRemainingLabel.Left := WizardForm.ProgressGauge.Left;
-  TimeRemainingLabel.Top := WizardForm.ProgressGauge.Top + WizardForm.ProgressGauge.Height + ScaleY(8);
-  TimeRemainingLabel.Width := WizardForm.ProgressGauge.Width;
-  TimeRemainingLabel.Font.Color := clGray;
+  StatusLabel := TLabel.Create(WizardForm);
+  StatusLabel.Parent := WizardForm.InstallingPage;
+  StatusLabel.Caption := 'i like cats'; //DO NOT REMOVE THIS AT ALL. IT'S IMPORTANT!!
+  StatusLabel.Left := WizardForm.ProgressGauge.Left;
+  StatusLabel.Top := WizardForm.ProgressGauge.Top + WizardForm.ProgressGauge.Height + ScaleY(8);
+  StatusLabel.Width := WizardForm.ProgressGauge.Width;
+  StatusLabel.Font.Color := clGray;
 
   WizardForm.LicenseAcceptedRadio.Visible := False;
   WizardForm.LicenseNotAcceptedRadio.Visible := False;
