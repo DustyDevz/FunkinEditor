@@ -13,10 +13,12 @@ DefaultDirName={localappdata}\Programs\FunkinEditor
 DefaultGroupName=FunkinEditor
 OutputDir=.\installer_output
 OutputBaseFilename=FunkinSetup
-Compression=lzma2/max
+Compression=lzma2/ultra64
 SolidCompression=yes
+LZMAUseSeparateProcess=yes
+LZMADictionarySize=1048576
+LZMANumFastBytes=273
 LZMANumBlockThreads=8
-LZMABlockSize=65536
 ChangesAssociations=yes
 DisableProgramGroupPage=yes
 DisableDirPage=yes
@@ -42,14 +44,12 @@ Source: "..\assets\images\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\export\Release\FunkinEditor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\export\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\export\Release\platforms\*"; DestDir: "{app}\platforms"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: IsInstallOrRepairSelected
 
 [Icons]
 Name: "{group}\FunkinEditor"; Filename: "{app}\FunkinEditor.exe"; IconFilename: "{app}\icon.ico"; Tasks: startmenuicon
 Name: "{autodesktop}\FunkinEditor"; Filename: "{app}\FunkinEditor.exe"; Tasks: desktopicon; IconFilename: "{app}\icon.ico"
 
 [Run]
-Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ Redistributable..."; Check: IsInstallOrRepairSelected and VCRedistNeedsInstall
 Filename: "{app}\FunkinEditor.exe"; Description: "{cm:LaunchProgram,FunkinEditor}"; Flags: nowait postinstall skipifsilent; Check: IsInstallOrRepairSelected
 
 [UninstallDelete]
@@ -57,12 +57,16 @@ Type: filesandordirs; Name: "{app}"
 
 [Code]
 var
-  OptionPage: TWizardPage;
+  OptionPage, VCRedistPage: TWizardPage;
   InstallRadio, RemoveRadio, RepairRadio: TRadioButton;
   CopyrightLabel: TLabel;
   LicenseCheck: TNewCheckBox;
+
   AllowSilentExit: Boolean;
+  VCRedistInstallClicked: Boolean;
+
   RequiredSpaceLabel, AvailableSpaceLabel, StatusLabel: TLabel;
+  WarningLabel: TLabel;
   
 function IsMaintenanceMode: Boolean;
 var
@@ -87,10 +91,10 @@ var
   Installed: Cardinal;
 begin
   Result := True;
-  if RegQueryDWordValue(HKLM64, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64', 'Installed', Installed) then
-  begin
-    Result := Installed <> 1;
-  end;
+  // if RegQueryDWordValue(HKLM64, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64', 'Installed', Installed) then
+  // begin
+    // Result := Installed <> 1;
+  // end;
 end;
 
 function FormatBytes(Bytes: Int64): String;
@@ -143,16 +147,24 @@ begin
   AvailableSpaceLabel.Visible := InstallRadio.Checked;
 end;
 
+procedure DownloadButtonClick(Sender: TObject);
+var
+  ResultCode: Integer;
+begin
+  ShellExec('open', 'https://aka.ms/vs/17/release/vc_redist.x64.exe', '', '', SW_SHOWNORMAL, ewNoWait, ResultCode);
+end;
+
 procedure InitializeWizard;
 var
   Maintenance: Boolean;
 begin
   AllowSilentExit := False;
+  VCRedistInstallClicked := False;
   CreateCopyrightLabel(WizardForm);
   
   StatusLabel := TLabel.Create(WizardForm);
   StatusLabel.Parent := WizardForm.InstallingPage;
-  StatusLabel.Caption := 'i like cats'; //DO NOT REMOVE THIS AT ALL. IT'S IMPORTANT!!
+  StatusLabel.Caption := 'i like cats'; 
   StatusLabel.Left := WizardForm.ProgressGauge.Left;
   StatusLabel.Top := WizardForm.ProgressGauge.Top + WizardForm.ProgressGauge.Height + ScaleY(8);
   StatusLabel.Width := WizardForm.ProgressGauge.Width;
@@ -160,22 +172,20 @@ begin
 
   WizardForm.LicenseAcceptedRadio.Visible := False;
   WizardForm.LicenseNotAcceptedRadio.Visible := False;
-
-  WizardForm.LicenseMemo.Top := WizardForm.LicenseMemo.Top + ScaleY(15);
-  WizardForm.LicenseMemo.Height := WizardForm.LicenseMemo.Height + ScaleY(10);
-
+  WizardForm.LicenseMemo.Height := WizardForm.LicenseMemo.Height + ScaleY(20);
+ 
   LicenseCheck := TNewCheckBox.Create(WizardForm);
   LicenseCheck.Parent := WizardForm.LicensePage;
   LicenseCheck.Caption := 'I have read and accept the license agreement';
   LicenseCheck.Left := WizardForm.LicenseMemo.Left;
-  LicenseCheck.Top := WizardForm.LicenseMemo.Top + WizardForm.LicenseMemo.Height + ScaleY(12);
+  LicenseCheck.Top := WizardForm.LicenseMemo.Top + WizardForm.LicenseMemo.Height + ScaleY(16);
   LicenseCheck.Width := WizardForm.LicenseMemo.Width;
   LicenseCheck.OnClick := @LicenseCheckClick;
+  LicenseCheck.Font.Style := [fsBold];
+  LicenseCheck.Font.Color := clWhite;
 
   WizardForm.NextButton.Enabled := False;
-
   OptionPage := CreateCustomPage(wpLicense, 'Setup Options', 'Select the action you want to perform.');
-
   Maintenance := IsMaintenanceMode;
 
   InstallRadio := TRadioButton.Create(OptionPage);
@@ -216,6 +226,19 @@ begin
   AvailableSpaceLabel.Top := ScaleY(140);
   AvailableSpaceLabel.Width := OptionPage.SurfaceWidth;
   AvailableSpaceLabel.Font.Color := clGray;
+
+  VCRedistPage := CreateCustomPage(OptionPage.ID, 'Prerequisite Required', '');
+ 
+  WarningLabel := TLabel.Create(VCRedistPage);
+  WarningLabel.Parent := VCRedistPage.Surface;
+  WarningLabel.Caption := 'You need the Microsoft Visual C++ Redistributable.' + #13#10#13#10 +
+    'Click Install to open the download page. Once it finishes installing, click Check to continue.';
+    WarningLabel.Height := ScaleY(60);
+  WarningLabel.AutoSize := False;
+  WarningLabel.WordWrap := True;
+  WarningLabel.Alignment := taCenter;
+  WarningLabel.Width := VCRedistPage.SurfaceWidth;
+  WarningLabel.Top := ScaleY(80);
 end;
 
 procedure InitializeUninstallProgressForm;
@@ -231,21 +254,33 @@ begin
     WizardForm.LicenseNotAcceptedRadio.Checked := not LicenseCheck.Checked;
     WizardForm.NextButton.Enabled := LicenseCheck.Checked;
   end;
+ 
+  if CurPageID = VCRedistPage.ID then
+  begin
+    if VCRedistInstallClicked then
+      WizardForm.NextButton.Caption := 'Check'
+    else
+      WizardForm.NextButton.Caption := 'Install';
+  end
+  else
+    WizardForm.NextButton.Caption := SetupMessage(msgButtonNext);
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   Result := False;
 
-  if IsMaintenanceMode and (PageID = wpSelectTasks) then
+  if PageID = VCRedistPage.ID then
   begin
-    if RemoveRadio.Checked then
+    if not IsInstallOrRepairSelected then
+      Result := True
+    else if not VCRedistNeedsInstall then
       Result := True;
   end;
-  
+
   if IsMaintenanceMode and (PageID = wpSelectTasks) then
   begin
-    if RepairRadio.Checked then
+    if RemoveRadio.Checked or RepairRadio.Checked then
       Result := True;
   end;
 end;
@@ -265,6 +300,34 @@ var
   UninstallPath: String;
 begin
   Result := True;
+ 
+  if CurPageID = VCRedistPage.ID then
+  begin
+    if not VCRedistInstallClicked then
+    begin
+      DownloadButtonClick(nil);
+      VCRedistInstallClicked := True;
+      WizardForm.NextButton.Caption := 'Check';
+      Result := False;
+      Exit;
+    end
+    else
+    begin
+      if VCRedistNeedsInstall then
+      begin
+        MsgBox('The Visual C++ Redistributable still isn''t detected. ' +
+               'Make sure the download finished installing, then click Check again.',
+               mbInformation, MB_OK);
+        Result := False;
+        Exit;
+      end
+      else
+      begin
+        Result := True;
+      end;
+    end;
+  end;
+ 
   if CurPageID = OptionPage.ID then
   begin
     if RemoveRadio.Checked then
