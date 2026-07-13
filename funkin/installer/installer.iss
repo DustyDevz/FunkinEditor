@@ -137,6 +137,12 @@ begin
   WizardForm.NextButton.Enabled := LicenseCheck.Checked;
 end;
 
+procedure OptionRadioClick(Sender: TObject);
+begin
+  RequiredSpaceLabel.Visible := InstallRadio.Checked;
+  AvailableSpaceLabel.Visible := InstallRadio.Checked;
+end;
+
 procedure InitializeWizard;
 var
   Maintenance: Boolean;
@@ -192,6 +198,10 @@ begin
   RepairRadio.Top := ScaleY(80);
   RepairRadio.Width := OptionPage.SurfaceWidth;
   RepairRadio.Enabled := Maintenance;
+
+  InstallRadio.OnClick := @OptionRadioClick;
+  RemoveRadio.OnClick := @OptionRadioClick;
+  RepairRadio.OnClick := @OptionRadioClick;
  
   RequiredSpaceLabel := TLabel.Create(OptionPage);
   RequiredSpaceLabel.Parent := OptionPage.Surface;
