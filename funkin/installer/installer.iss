@@ -91,10 +91,10 @@ var
   Installed: Cardinal;
 begin
   Result := True;
-  // if RegQueryDWordValue(HKLM64, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64', 'Installed', Installed) then
-  // begin
-    // Result := Installed <> 1;
-  // end;
+  if RegQueryDWordValue(HKLM64, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64', 'Installed', Installed) then
+  begin
+    Result := Installed <> 1;
+  end;
 end;
 
 function FormatBytes(Bytes: Int64): String;
