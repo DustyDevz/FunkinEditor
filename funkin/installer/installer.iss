@@ -59,14 +59,14 @@ var
   InstallRadio, RemoveRadio, RepairRadio: TRadioButton;
   CopyrightLabel: TLabel;
   LicenseCheck: TNewCheckBox;
- 
+  AllowSilentExit: Boolean;
+
 function IsMaintenanceMode: Boolean;
 var
   FoundHKCU, FoundHKLM: Boolean;
 begin
   FoundHKCU := RegKeyExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1');
   FoundHKLM := RegKeyExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1');
- 
   Result := FoundHKCU or FoundHKLM;
 end;
 
@@ -109,6 +109,7 @@ end;
 
 procedure InitializeWizard;
 begin
+  AllowSilentExit := False;
   CreateCopyrightLabel(WizardForm);
 
   WizardForm.LicenseAcceptedRadio.Visible := False;
@@ -186,26 +187,53 @@ begin
   end;
 end;
 
+procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+begin
+  if AllowSilentExit then
+  begin
+    Cancel := True;
+    Confirm := False;
+  end;
+end;
+
 function NextButtonClick(CurPageID: Integer): Boolean;
 var
   ResultCode: Integer;
+  UninstallPath: String;
 begin
   Result := True;
   if CurPageID = OptionPage.ID then
   begin
     if RemoveRadio.Checked then
     begin
-      if Exec(ExpandConstant('{uninstallexe}'), '/SILENT', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+      UninstallPath := '';
+      if not RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1', 'UninstallString', UninstallPath) then
       begin
-        if ResultCode <> 0 then
-          MsgBox('The uninstaller reported an error (code ' + IntToStr(ResultCode) + '). ' +
-                 'Some files may not have been removed.', mbError, MB_OK);
-        Result := False;
-        WizardForm.Close;
+        RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1', 'UninstallString', UninstallPath);
+      end;
+
+      if UninstallPath <> '' then
+      begin
+        UninstallPath := RemoveQuotes(UninstallPath);
+        if Exec(UninstallPath, '/SILENT', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+        begin
+          if ResultCode <> 0 then
+            MsgBox('The uninstaller reported an error (code ' + IntToStr(ResultCode) + '). ' +
+                   'Some files may not have been removed.', mbError, MB_OK);
+          
+          Result := False;
+          AllowSilentExit := True;
+          PostMessage(WizardForm.Handle, $0010, 0, 0); 
+        end
+        else
+        begin
+          MsgBox('Failed to launch the uninstaller. Please try running it manually.', mbCriticalError, MB_OK);
+          Result := False;
+        end;
       end
       else
       begin
-        MsgBox('Failed to launch the uninstaller. Please try running it manually.', mbCriticalError, MB_OK);
+        MsgBox('Could not find the uninstaller path in the registry.', mbCriticalError, MB_OK);
         Result := False;
       end;
     end;
