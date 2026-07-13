@@ -59,11 +59,15 @@ var
   InstallRadio, RemoveRadio, RepairRadio: TRadioButton;
   CopyrightLabel: TLabel;
   LicenseCheck: TNewCheckBox;
-  
+ 
 function IsMaintenanceMode: Boolean;
+var
+  FoundHKCU, FoundHKLM: Boolean;
 begin
-  Result := RegKeyExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{{#MyAppId}_is1')
-         or RegKeyExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{{#MyAppId}_is1');
+  FoundHKCU := RegKeyExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1');
+  FoundHKLM := RegKeyExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1');
+ 
+  Result := FoundHKCU or FoundHKLM;
 end;
 
 function IsInstallOrRepairSelected: Boolean;
