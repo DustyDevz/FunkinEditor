@@ -32,7 +32,7 @@ UninstallDisplayIcon={app}\icon.ico
 LicenseLabel3=
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Check: IsInstallOrRepairSelected
+Name: "desktopicon"; Description: "Create a Desktop shortcut"; GroupDescription: "{cm:AdditionalIcons}"; Check: IsInstallOrRepairSelected
 Name: "startmenuicon"; Description: "Create a Start Menu shortcut"; GroupDescription: "{cm:AdditionalIcons}"; Check: IsInstallOrRepairSelected
 
 [Files]
