@@ -1,12 +1,12 @@
-#ifndef MyAppVersion
-  #define MyAppVersion "0.0.1"
+#ifndef AppVersion
+  #define AppVersion "0.0.1"
 #endif
-#define MyAppId "C5F6E4C0-23C3-49AD-9E63-5125C281F0CF"
+#define AppId "C5F6E4C0-23C3-49AD-9E63-5125C281F0CF"
 
 [Setup]
-AppId={#MyAppId}
+AppId={#AppId}
 AppName=FunkinEditor
-AppVersion={#MyAppVersion}
+AppVersion={#AppVersion}
 AppPublisher=Dusty
 AppCopyright=Copyright (C) 2026 Dusty
 DefaultDirName={localappdata}\Programs\FunkinEditor
@@ -72,8 +72,8 @@ function IsMaintenanceMode: Boolean;
 var
   FoundHKCU, FoundHKLM: Boolean;
 begin
-  FoundHKCU := RegKeyExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1');
-  FoundHKLM := RegKeyExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1');
+  FoundHKCU := RegKeyExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#AppId}_is1');
+  FoundHKLM := RegKeyExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#AppId}_is1');
   Result := FoundHKCU or FoundHKLM;
 end;
 
@@ -383,9 +383,9 @@ begin
     if RemoveRadio.Checked then
     begin
       UninstallPath := '';
-      if not RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1', 'UninstallString', UninstallPath) then
+      if not RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#AppId}_is1', 'UninstallString', UninstallPath) then
       begin
-        RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1', 'UninstallString', UninstallPath);
+        RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#AppId}_is1', 'UninstallString', UninstallPath);
       end;
 
       if UninstallPath <> '' then
