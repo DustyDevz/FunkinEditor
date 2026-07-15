@@ -10,18 +10,18 @@
 #include <cstdint>
 
 namespace Funkin::Render::GFX {
-    class VKContext {
+    class vk_context {
     public:
-        static VKContext& instance();
-        bool initialize(void* nativeWindowHandle, uint16_t width, uint16_t height);
+        static vk_context& instance();
+        bool init(void* native_window_handle, uint16_t w, uint16_t h);
         void shutdown();
         void frame();
-        void reset(uint16_t width, uint16_t height);
+        void reset(uint16_t w, uint16_t h);
 
-        bool isInitialized() const { return m_initialized_; }
+        bool is_initialized() const { return m_initialized_; }
 
     private:
-        VKContext() = default;
+        vk_context() = default;
         bool m_initialized_ = false;
     };
 }

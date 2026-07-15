@@ -9,55 +9,55 @@
 #include "render/gfx/vk_context.hpp"
 
 namespace Funkin::Render::GFX {
-    VKContext& VKContext::instance() {
-        static VKContext ctx;
+    vk_context& vk_context::instance() {
+        static vk_context ctx;
         return ctx;
     }
 
-    bool VKContext::initialize(void* nativeWindowHandle, uint16_t width, uint16_t height) {
+    bool vk_context::init(void* native_window_handle, uint16_t w, uint16_t h) {
         if (m_initialized_) return true;
 
-        if (!nativeWindowHandle) {
-            LOG_CRIT("initialize: nativeWindowHandle is null");
+        if (!native_window_handle) {
+            LOG_CRIT("native_window_handle is null");
             return false;
         }
 
         bgfx::PlatformData pd{};
-        pd.nwh = nativeWindowHandle;
+        pd.nwh = native_window_handle;
         bgfx::setPlatformData(pd);
 
         bgfx::Init init;
         init.type              = bgfx::RendererType::Count;
-        init.resolution.width  = width;
-        init.resolution.height = height;
+        init.resolution.width  = w;
+        init.resolution.height = h;
         init.resolution.reset  = BGFX_RESET_VSYNC;
 
         if (!bgfx::init(init)) {
-            LOG_CRIT("initialize: bgfx::init failed");
+            LOG_CRIT("init failed");
             return false;
         }
 
-        LOG_PRINT("initialize: bgfx initialized OK, renderer={}",
+        LOG_PRINT("init OK, renderer={}",
                    bgfx::getRendererName(bgfx::getRendererType()));
 
         m_initialized_ = true;
         return true;
     }
 
-    void VKContext::shutdown() {
+    void vk_context::shutdown() {
         if (!m_initialized_) return;
-        LOG_PRINT("shutdown: shutting down bgfx");
+        LOG_PRINT("shutdown");
         bgfx::shutdown();
         m_initialized_ = false;
     }
 
-    void VKContext::frame() {
+    void vk_context::frame() {
         if (m_initialized_) bgfx::frame();
     }
 
-    void VKContext::reset(uint16_t width, uint16_t height) {
+    void vk_context::reset(uint16_t w, uint16_t h) {
         if (!m_initialized_) return;
-        LOG_PRINT("reset: {}x{}", width, height);
-        bgfx::reset(width, height, BGFX_RESET_VSYNC);
+        LOG_PRINT("reset: {}x{}", w, h);
+        bgfx::reset(w, h, BGFX_RESET_VSYNC);
     }
 }
