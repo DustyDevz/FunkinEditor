@@ -1,8 +1,9 @@
-//
-// Created by root on 7/14/2026.
-//
+/*
+ FunkinC++ Engine
+ Copyright (©) 2026 Dusty. All rights reserved.
 
-#ifndef FUNKINC___VK_VIEWPORT_HPP
-#define FUNKINC___VK_VIEWPORT_HPP
+ This program is licensed under the GNU Affero General Public License v3.0 and is distributed WITHOUT ANY WARRANTY.
+ For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+*/
 
-#endif //FUNKINC___VK_VIEWPORT_HPP
+#pragma once
