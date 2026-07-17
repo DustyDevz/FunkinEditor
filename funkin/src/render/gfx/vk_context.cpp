@@ -58,7 +58,7 @@ namespace Funkin::Render::GFX {
             return false;
         }
 
-        bgfx::setDebug(BGFX_DEBUG_TEXT);
+        //bgfx::setDebug(BGFX_DEBUG_TEXT | BGFX_DEBUG_STATS);
 
         LOG_PRINT("init OK, renderer={}",
                    bgfx::getRendererName(bgfx::getRendererType()));

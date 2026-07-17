@@ -18,11 +18,12 @@
 class resize_filter : public QAbstractNativeEventFilter {
 public:
     Funkin::Render::QT::vk_viewport* target = nullptr;
+    HWND top_level_hwnd = nullptr;
 
     bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *) override {
         if (eventType != "windows_generic_MSG") return false;
         auto* msg = static_cast<MSG*>(message);
-        if (msg->message == WM_SIZE && target) {
+        if (msg->message == WM_SIZE && target && msg->hwnd == top_level_hwnd) {
             const int w = LOWORD(msg->lParam);
             const int h = HIWORD(msg->lParam);
             target->force_resize(w, h);
@@ -53,6 +54,7 @@ int main(int argc, char* argv[]) {
         if (root_window) {
             auto* vp = root_window->findChild<Funkin::Render::QT::vk_viewport*>("viewport");
             filter->target = vp;
+            filter->top_level_hwnd = reinterpret_cast<HWND>(root_window->winId());
 
             if (vp) {
                 QObject::connect(root_window, &QQuickWindow::closing, vp, [vp](QQuickCloseEvent*) {
