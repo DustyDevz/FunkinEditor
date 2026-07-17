@@ -53,6 +53,12 @@ int main(int argc, char* argv[]) {
         if (root_window) {
             auto* vp = root_window->findChild<Funkin::Render::QT::vk_viewport*>("viewport");
             filter->target = vp;
+
+            if (vp) {
+                QObject::connect(root_window, &QQuickWindow::closing, vp, [vp](QQuickCloseEvent*) {
+                    vp->shutdown();
+                });
+            }
         }
     }
     app.installNativeEventFilter(filter);

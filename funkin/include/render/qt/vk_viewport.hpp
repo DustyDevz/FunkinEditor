@@ -20,6 +20,7 @@ namespace Funkin::Render::QT {
         ~vk_viewport() override;
 
         void force_resize(int w, int h);
+        void shutdown();
 
     protected:
         void itemChange(ItemChange, const ItemChangeData &) override;
@@ -30,7 +31,6 @@ namespace Funkin::Render::QT {
         void on_surface_ready();
         void on_surface_resized(int w, int h);
         void render_frame();
-        void shutdown();
         void reparent_now(QWindow* quick_window);
 
         std::unique_ptr<vk_surface> m_surface_;

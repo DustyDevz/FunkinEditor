@@ -30,6 +30,7 @@ namespace Funkin::Render::QT {
             GFX::vk_context::instance().shutdown();
             m_vk_initialized_ = false;
         }
+        m_surface_.reset();
     }
 
     void vk_viewport::itemChange(ItemChange change, const ItemChangeData& value) {
