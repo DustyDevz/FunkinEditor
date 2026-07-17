@@ -1,5 +1,4 @@
 /*
-/*
  FunkinC++ Engine
  Copyright (©) 2026 Dusty. All rights reserved.
 
