@@ -22,11 +22,11 @@ namespace Funkin::Render::QT {
 
         signals:
         void surface_ready();
-        void surface_resized(int w, int h);
+        //void surface_resized(int w, int h);
 
     protected:
         void exposeEvent(QExposeEvent *) override;
-        void resizeEvent(QResizeEvent *) override;
+        //void resizeEvent(QResizeEvent *) override;
 
     private:
         bool m_exposed_ = false;

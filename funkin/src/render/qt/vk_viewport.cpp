@@ -50,7 +50,7 @@ namespace Funkin::Render::QT {
 
             m_surface_ = std::make_unique<vk_surface>();
             connect(m_surface_.get(), &vk_surface::surface_ready, this, &vk_viewport::on_surface_ready);
-            connect(m_surface_.get(), &vk_surface::surface_resized, this, &vk_viewport::on_surface_resized);
+            //connect(m_surface_.get(), &vk_surface::surface_resized, this, &vk_viewport::on_surface_resized);
             LOG_PRINT("creating native surface");
             m_surface_->create();
             m_surface_->show();
@@ -80,9 +80,8 @@ namespace Funkin::Render::QT {
         }
     }
 
-    // TODO: do I really need this??
     void vk_viewport::force_resize(int w, int h) {
-        LOG_PRINT("force_resize called: {}x{}", w, h);
+        //LOG_PRINT("force_resize called: {}x{}", w, h);
         if (!m_surface_ || w <= 0 || h <= 0) return;
 
         m_surface_->set_native_child_geometry(0, 0, w, h);
@@ -99,25 +98,25 @@ namespace Funkin::Render::QT {
             m_pending_reparent_window_ = nullptr;
         }
 
-        sync_surface_geometry();
+        //sync_surface_geometry();
     }
 
-    void vk_viewport::sync_surface_geometry() {
-        if (!m_surface_ || !window()) return;
-
-        const qreal dpr = window()->devicePixelRatio();
-        const int x = static_cast<int>(this->x() * dpr);
-        const int y = static_cast<int>(this->y() * dpr);
-        const int w = static_cast<int>(width()  * dpr);
-        const int h = static_cast<int>(height() * dpr);
-        LOG_PRINT("sync_surface_geometry called: {}x{}", w, h);
-        if (w <= 0 || h <= 0) return;
-
-        m_surface_->set_native_child_geometry(x, y, w, h);
-
-        // if (m_vk_initialized_)
-        //     GFX::vk_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
-    }
+    // void vk_viewport::sync_surface_geometry() {
+    //     if (!m_surface_ || !window()) return;
+    //
+    //     const qreal dpr = window()->devicePixelRatio();
+    //     const int x = static_cast<int>(this->x() * dpr);
+    //     const int y = static_cast<int>(this->y() * dpr);
+    //     const int w = static_cast<int>(width()  * dpr);
+    //     const int h = static_cast<int>(height() * dpr);
+    //     LOG_PRINT("sync_surface_geometry called: {}x{}", w, h);
+    //     if (w <= 0 || h <= 0) return;
+    //
+    //     m_surface_->set_native_child_geometry(x, y, w, h);
+    //
+    //      if (m_vk_initialized_)
+    //          GFX::vk_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
+    // }
 
     void vk_viewport::on_surface_ready() {
         if (m_vk_initialized_) return;
@@ -143,11 +142,11 @@ namespace Funkin::Render::QT {
         m_timer_->start();
     }
 
-    void vk_viewport::on_surface_resized(int w, int h) {
-        LOG_PRINT("on_surface_resized called: {}x{}", w, h);
-        // if (!m_vk_initialized_ || w <= 0 || h <= 0) return;
-        // GFX::vk_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
-    }
+    // void vk_viewport::on_surface_resized(int w, int h) {
+    //     LOG_PRINT("on_surface_resized called: {}x{}", w, h);
+    //     if (!m_vk_initialized_ || w <= 0 || h <= 0) return;
+    //     GFX::vk_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
+    // }
 
     void vk_viewport::render_frame() {
         if (!m_vk_initialized_) return;

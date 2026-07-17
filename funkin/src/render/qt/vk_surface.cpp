@@ -66,8 +66,8 @@ namespace Funkin::Render::QT {
         }
     }
 
-    void vk_surface::resizeEvent(QResizeEvent *event) {
-        QWindow::resizeEvent(event);
-        emit surface_resized(event->size().width(), event->size().height());
-    }
+    // void vk_surface::resizeEvent(QResizeEvent *event) {
+    //     QWindow::resizeEvent(event);
+    //     emit surface_resized(event->size().width(), event->size().height());
+    // }
 }

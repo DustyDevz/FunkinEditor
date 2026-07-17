@@ -27,9 +27,9 @@ namespace Funkin::Render::QT {
         void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     private:
-        void sync_surface_geometry();
+        //void sync_surface_geometry();
         void on_surface_ready();
-        void on_surface_resized(int w, int h);
+        //void on_surface_resized(int w, int h);
         void render_frame();
         void reparent_now(QWindow* quick_window);
 
