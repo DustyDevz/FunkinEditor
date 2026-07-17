@@ -96,4 +96,12 @@ add_custom_command(TARGET FunkinEditor POST_BUILD
 
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/platforms"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_qt_root_dir}/plugins/platforms/qwindows.dll" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/platforms/"
+
+        COMMAND "${_qt_bin_dir}/windeployqt.exe"
+        --qmldir "${CMAKE_SOURCE_DIR}"
+        --verbose 1
+        --no-compiler-runtime
+        --no-translations
+        --no-opengl-sw
+        "$<TARGET_FILE:FunkinEditor>"
 )

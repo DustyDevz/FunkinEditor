@@ -10,11 +10,13 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
+
+#include "render/qt/vk_viewport.hpp"
 #include "app/debug.hpp"
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+    qmlRegisterType<Funkin::Render::QT::vk_viewport>("Funkin.Render", 1, 0, "Render");
 
     QQmlApplicationEngine engine;
     Funkin::App::Debug* debug = new Funkin::App::Debug(&app);
@@ -25,6 +27,7 @@ int main(int argc, char* argv[]) {
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
+    QQuickWindow::setDefaultAlphaBuffer(true);
     engine.load(url);
     return app.exec();
 }
