@@ -6,11 +6,11 @@
  For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 */
 
-#include "render/gfx/vk_context.hpp"
+#include "render/graphics/gfx_context.hpp"
 
 namespace Funkin::Render::GFX {
-    vk_context& vk_context::instance() {
-        static vk_context ctx;
+    gfx_context& gfx_context::instance() {
+        static gfx_context ctx;
         return ctx;
     }
 
@@ -37,7 +37,7 @@ namespace Funkin::Render::GFX {
 
     static b_callback s_callback;
 
-    bool vk_context::init(void* native_window_handle, uint16_t w, uint16_t h) {
+    bool gfx_context::init(void* native_window_handle, uint16_t w, uint16_t h) {
         if (m_initialized_) return true;
 
         if (!native_window_handle) {
@@ -67,18 +67,18 @@ namespace Funkin::Render::GFX {
         return true;
     }
 
-    void vk_context::shutdown() {
+    void gfx_context::shutdown() {
         if (!m_initialized_) return;
         LOG_PRINT("shutdown");
         bgfx::shutdown();
         m_initialized_ = false;
     }
 
-    void vk_context::frame() {
+    void gfx_context::frame() {
         if (m_initialized_) bgfx::frame();
     }
 
-    void vk_context::reset(uint16_t w, uint16_t h) {
+    void gfx_context::reset(uint16_t w, uint16_t h) {
         if (!m_initialized_) return;
         LOG_PRINT("reset: {}x{}", w, h);
         bgfx::reset(w, h, BGFX_RESET_VSYNC);

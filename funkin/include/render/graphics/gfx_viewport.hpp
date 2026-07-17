@@ -11,13 +11,13 @@
 #include <memory>
 
 namespace Funkin::Render::QT {
-    class vk_surface;
-    class vk_viewport : public QQuickItem {
+    class gfx_surface;
+    class gfx_viewport : public QQuickItem {
         Q_OBJECT
 
     public:
-        vk_viewport();
-        ~vk_viewport() override;
+        gfx_viewport();
+        ~gfx_viewport() override;
 
         void force_resize(int w, int h);
         void shutdown();
@@ -33,7 +33,7 @@ namespace Funkin::Render::QT {
         void render_frame();
         void reparent_now(QWindow* quick_window);
 
-        std::unique_ptr<vk_surface> m_surface_;
+        std::unique_ptr<gfx_surface> m_surface_;
         QTimer* m_timer_ = nullptr;
         QWindow* m_pending_reparent_window_ = nullptr;
 

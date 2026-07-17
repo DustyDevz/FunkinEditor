@@ -10,9 +10,9 @@
 #include <bgfx/bgfx.h>
 
 namespace Funkin::Render::GFX {
-    class vk_render {
+    class gfx_render {
     public:
-        explicit vk_render(bgfx::ViewId id);
+        explicit gfx_render(bgfx::ViewId id);
 
         void set_color(uint32_t rgba);
         void set_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);

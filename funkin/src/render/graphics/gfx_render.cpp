@@ -6,20 +6,20 @@
  For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 */
 
-#include "render/gfx/vk_render.hpp"
+#include "render/graphics/gfx_render.hpp"
 
 namespace Funkin::Render::GFX {
-    vk_render::vk_render(bgfx::ViewId id) : m_id_(id) {}
+    gfx_render::gfx_render(bgfx::ViewId id) : m_id_(id) {}
 
-    void vk_render::set_color(uint32_t rgba) {
+    void gfx_render::set_color(uint32_t rgba) {
         bgfx::setViewClear(m_id_, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, rgba, 1.f, 0);
     }
 
-    void vk_render::set_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    void gfx_render::set_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         bgfx::setViewRect(m_id_, x, y, w, h);
     }
 
-    void vk_render::touch() {
+    void gfx_render::touch() {
         bgfx::touch(m_id_);
     }
 }

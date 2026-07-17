@@ -10,11 +10,11 @@
 #include <QWindow>
 
 namespace Funkin::Render::QT {
-    class vk_surface : public QWindow {
+    class gfx_surface : public QWindow {
         Q_OBJECT
 
     public:
-        explicit vk_surface(QWindow* parent = nullptr);
+        explicit gfx_surface(QWindow* parent = nullptr);
 
         bool reparent_as_native_child(QWindow* window, int x, int y, int w, int h);
         void set_native_child_geometry(int x, int y, int w, int h);

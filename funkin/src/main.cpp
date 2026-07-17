@@ -12,12 +12,12 @@
 #include <QQuickWindow>
 #include <QAbstractNativeEventFilter>
 
-#include "render/qt/vk_viewport.hpp"
+#include "../include/render/graphics/gfx_viewport.hpp"
 #include "app/debug.hpp"
 
 class resize_filter : public QAbstractNativeEventFilter {
 public:
-    Funkin::Render::QT::vk_viewport* target = nullptr;
+    Funkin::Render::QT::gfx_viewport* target = nullptr;
     HWND top_level_hwnd = nullptr;
 
     bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *) override {
@@ -34,7 +34,7 @@ public:
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
-    qmlRegisterType<Funkin::Render::QT::vk_viewport>("Funkin.Render", 1, 0, "Render");
+    qmlRegisterType<Funkin::Render::QT::gfx_viewport>("Funkin.Render", 1, 0, "Render");
 
     QQmlApplicationEngine engine;
     Funkin::App::Debug* debug = new Funkin::App::Debug(&app);
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     if (!engine.rootObjects().isEmpty()) {
         auto* root_window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
         if (root_window) {
-            auto* vp = root_window->findChild<Funkin::Render::QT::vk_viewport*>("viewport");
+            auto* vp = root_window->findChild<Funkin::Render::QT::gfx_viewport*>("viewport");
             filter->target = vp;
             filter->top_level_hwnd = reinterpret_cast<HWND>(root_window->winId());
 

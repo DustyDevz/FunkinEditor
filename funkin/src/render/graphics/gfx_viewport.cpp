@@ -6,10 +6,10 @@ FunkinC++ Engine
  For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 */
 
-#include "render/gfx/vk_context.hpp"
-#include "render/gfx/vk_render.hpp"
-#include "render/qt/vk_surface.hpp"
-#include "render/qt/vk_viewport.hpp"
+#include "render/graphics/gfx_context.hpp"
+#include "render/graphics/gfx_render.hpp"
+#include "../../../include/render/graphics/gfx_surface.hpp"
+#include "../../../include/render/graphics/gfx_viewport.hpp"
 
 #include <QTimer>
 #include <QQuickWindow>
@@ -18,16 +18,16 @@ FunkinC++ Engine
 #include "utils/log.hpp"
 
 namespace Funkin::Render::QT {
-    vk_viewport::vk_viewport() {
+    gfx_viewport::gfx_viewport() {
       LOG_PRINT("constructed");
     }
 
-    vk_viewport::~vk_viewport() {
+    gfx_viewport::~gfx_viewport() {
         LOG_PRINT("destructing");
         shutdown();
     }
 
-    void vk_viewport::shutdown() {
+    void gfx_viewport::shutdown() {
         if (m_shutdown_done_) return;
         m_shutdown_done_ = true;
 
@@ -35,27 +35,27 @@ namespace Funkin::Render::QT {
             m_timer_->stop();
         }
         if (m_vk_initialized_) {
-            GFX::vk_context::instance().shutdown();
+            GFX::gfx_context::instance().shutdown();
             m_vk_initialized_ = false;
         }
         m_surface_.reset();
     }
 
-    void vk_viewport::itemChange(ItemChange change, const ItemChangeData& value) {
+    void gfx_viewport::itemChange(ItemChange change, const ItemChangeData& value) {
         QQuickItem::itemChange(change, value);
 
         if (change == ItemSceneChange && value.window != nullptr) {
             auto* quick_window = value.window;
             if (!quick_window) return;
 
-            m_surface_ = std::make_unique<vk_surface>();
-            connect(m_surface_.get(), &vk_surface::surface_ready, this, &vk_viewport::on_surface_ready);
+            m_surface_ = std::make_unique<gfx_surface>();
+            connect(m_surface_.get(), &gfx_surface::surface_ready, this, &gfx_viewport::on_surface_ready);
             //connect(m_surface_.get(), &vk_surface::surface_resized, this, &vk_viewport::on_surface_resized);
             LOG_PRINT("creating native surface");
             m_surface_->create();
             m_surface_->show();
 
-            connect(qGuiApp, &QGuiApplication::aboutToQuit, this, &vk_viewport::shutdown);
+            connect(qGuiApp, &QGuiApplication::aboutToQuit, this, &gfx_viewport::shutdown);
 
             if (width() > 0 && height() > 0) {
                 reparent_now(quick_window);
@@ -66,7 +66,7 @@ namespace Funkin::Render::QT {
         }
     }
 
-    void vk_viewport::reparent_now(QWindow* quick_window) {
+    void gfx_viewport::reparent_now(QWindow* quick_window) {
         if (m_reparented_ || !m_surface_) return;
 
         const qreal dpr = quick_window->devicePixelRatio();
@@ -80,17 +80,17 @@ namespace Funkin::Render::QT {
         }
     }
 
-    void vk_viewport::force_resize(int w, int h) {
+    void gfx_viewport::force_resize(int w, int h) {
         //LOG_PRINT("force_resize called: {}x{}", w, h);
         if (!m_surface_ || w <= 0 || h <= 0) return;
 
         m_surface_->set_native_child_geometry(0, 0, w, h);
         if (m_vk_initialized_)
-            GFX::vk_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
+            GFX::gfx_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
     }
 
 
-    void vk_viewport::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) {
+    void gfx_viewport::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) {
         QQuickItem::geometryChange(newGeometry, oldGeometry);
 
         if (!m_reparented_ && m_pending_reparent_window_ && width() > 0 && height() > 0) {
@@ -118,7 +118,7 @@ namespace Funkin::Render::QT {
     //          GFX::vk_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
     // }
 
-    void vk_viewport::on_surface_ready() {
+    void gfx_viewport::on_surface_ready() {
         if (m_vk_initialized_) return;
 
         const qreal dpr = window() ? window()->devicePixelRatio() : 1.0;
@@ -126,7 +126,7 @@ namespace Funkin::Render::QT {
         const int h = static_cast<int>(height() * dpr) > 0 ? static_cast<int>(height() * dpr) : 1;
 
         LOG_PRINT("surface ready, initializing vk at {}x{}", w, h);
-        m_vk_initialized_ = GFX::vk_context::instance().init(
+        m_vk_initialized_ = GFX::gfx_context::instance().init(
             m_surface_->native_handle(),
             static_cast<uint16_t>(w),
             static_cast<uint16_t>(h));
@@ -138,7 +138,7 @@ namespace Funkin::Render::QT {
 
         m_timer_ = new QTimer(this);
         m_timer_->setInterval(16);
-        connect(m_timer_, &QTimer::timeout, this, &vk_viewport::render_frame);
+        connect(m_timer_, &QTimer::timeout, this, &gfx_viewport::render_frame);
         m_timer_->start();
     }
 
@@ -148,10 +148,10 @@ namespace Funkin::Render::QT {
     //     GFX::vk_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
     // }
 
-    void vk_viewport::render_frame() {
+    void gfx_viewport::render_frame() {
         if (!m_vk_initialized_) return;
 
-        GFX::vk_render view(0);
+        GFX::gfx_render view(0);
         view.set_color(0x2A2A2AFF); // debug [0x00FF00FF]
         view.set_rect(0, 0, static_cast<uint16_t>(width()), static_cast<uint16_t>(height()));
         view.touch();
@@ -159,6 +159,6 @@ namespace Funkin::Render::QT {
         bgfx::dbgTextClear();
         bgfx::dbgTextPrintf(0, 0, 0x0f, "hi :3");
 
-        GFX::vk_context::instance().frame();
+        GFX::gfx_context::instance().frame();
     }
 }

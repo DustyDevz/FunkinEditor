@@ -6,16 +6,16 @@
  For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 */
 
-#include "render/qt/vk_surface.hpp"
+#include "../../../include/render/graphics/gfx_surface.hpp"
 
 namespace Funkin::Render::QT {
-    vk_surface::vk_surface(QWindow *parent) : QWindow(parent) {}
+    gfx_surface::gfx_surface(QWindow *parent) : QWindow(parent) {}
 
-    void *vk_surface::native_handle() const {
+    void *gfx_surface::native_handle() const {
         return reinterpret_cast<void*>(winId());
     }
 
-    bool vk_surface::reparent_as_native_child(QWindow *window, int x, int y, int w, int h) {
+    bool gfx_surface::reparent_as_native_child(QWindow *window, int x, int y, int w, int h) {
         if (!window || !handle()) {
             LOG_ERR("missing window or handle");
             return false;
@@ -51,7 +51,7 @@ namespace Funkin::Render::QT {
         return true;
     }
 
-    void vk_surface::set_native_child_geometry(int x, int y, int w, int h) {
+    void gfx_surface::set_native_child_geometry(int x, int y, int w, int h) {
         if (!m_native_child_ || !handle()) return;
 
         auto child_hwnd = reinterpret_cast<HWND>(winId());
@@ -59,7 +59,7 @@ namespace Funkin::Render::QT {
         SetWindowPos(child_hwnd, nullptr, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
-    void vk_surface::exposeEvent(QExposeEvent *) {
+    void gfx_surface::exposeEvent(QExposeEvent *) {
         if (isExposed() && !m_exposed_) {
             m_exposed_ = true;
             emit surface_ready();
