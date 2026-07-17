@@ -71,6 +71,15 @@ namespace Funkin::Render::QT {
         }
     }
 
+    // TODO: do I really need this??
+    void vk_viewport::force_resize(int w, int h) {
+        if (!m_surface_ || w <= 0 || h <= 0) return;
+
+        m_surface_->set_native_child_geometry(0, 0, w, h);
+        if (m_vk_initialized_)
+            GFX::vk_context::instance().reset(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
+    }
+
     void vk_viewport::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) {
         QQuickItem::geometryChange(newGeometry, oldGeometry);
 

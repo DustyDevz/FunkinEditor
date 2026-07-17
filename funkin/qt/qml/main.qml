@@ -6,10 +6,10 @@ Window {
     width: 1280
     height: 720
     visible: true
-    color: "red"
 
     Render {
         id: viewport
+        objectName: "viewport"
         anchors.fill: parent
     }
 

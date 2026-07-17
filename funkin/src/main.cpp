@@ -10,9 +10,26 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
+#include <QAbstractNativeEventFilter>
 
 #include "render/qt/vk_viewport.hpp"
 #include "app/debug.hpp"
+
+class resize_filter : public QAbstractNativeEventFilter {
+public:
+    Funkin::Render::QT::vk_viewport* target = nullptr;
+
+    bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *) override {
+        if (eventType != "windows_generic_MSG") return false;
+        auto* msg = static_cast<MSG*>(message);
+        if (msg->message == WM_SIZE && target) {
+            const int w = LOWORD(msg->lParam);
+            const int h = HIWORD(msg->lParam);
+            target->force_resize(w, h);
+        }
+        return false;
+    }
+};
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
@@ -29,5 +46,16 @@ int main(int argc, char* argv[]) {
 
     QQuickWindow::setDefaultAlphaBuffer(true);
     engine.load(url);
+
+    auto* filter = new resize_filter();
+    if (!engine.rootObjects().isEmpty()) {
+        auto* root_window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
+        if (root_window) {
+            auto* vp = root_window->findChild<Funkin::Render::QT::vk_viewport*>("viewport");
+            filter->target = vp;
+        }
+    }
+    app.installNativeEventFilter(filter);
+
     return app.exec();
 }

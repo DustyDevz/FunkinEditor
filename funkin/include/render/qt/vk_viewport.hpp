@@ -19,6 +19,8 @@ namespace Funkin::Render::QT {
         vk_viewport();
         ~vk_viewport() override;
 
+        void force_resize(int w, int h);
+
     protected:
         void itemChange(ItemChange, const ItemChangeData &) override;
         void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
