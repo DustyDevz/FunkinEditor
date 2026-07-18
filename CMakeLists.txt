@@ -23,15 +23,28 @@ set(DILIGENT_NO_GL OFF CACHE BOOL "Enable OpenGL/GLES" FORCE)
 
 add_subdirectory("funkin/libs/diligent")
 
+if(WIN32 AND TARGET Diligent-Win32Platform)
+    target_compile_options(Diligent-Win32Platform PRIVATE
+            -include "${CMAKE_SOURCE_DIR}/funkin/cmake/thread_desc_compat.h"
+    )
+endif()
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Vulkan REQUIRED)
+
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
         "funkin/src/*.cpp"
         "funkin/include/*.hpp"
 )
-
 add_executable(FunkinEditor ${ENGINE_SOURCES})
 
 target_link_libraries(FunkinEditor PRIVATE
-        Diligent-GraphicsEngineDynamic-shared
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Qml
+        Qt6::Quick
+        Vulkan::Vulkan
+        Diligent-GraphicsEngineVk-static
 )
 
 target_include_directories(FunkinEditor PRIVATE

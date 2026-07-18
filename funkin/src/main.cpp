@@ -8,20 +8,7 @@
 
 #include <QGuiApplication>
 
-#include "render/graphics/gfx_device.hpp"
-
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
-
-    bool ok = Funkin::Render::GFX::gfx_device::instance().init(
-        #ifdef FUNKIN_DEBUG
-            true
-        #else
-            false
-        #endif
-    );
-    LOG_PRINT("device init result: {}", ok);
-
-
     return app.exec();
 }
