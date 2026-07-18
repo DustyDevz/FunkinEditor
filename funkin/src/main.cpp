@@ -7,63 +7,21 @@
 */
 
 #include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickWindow>
-#include <QAbstractNativeEventFilter>
 
-#include "../include/render/graphics/gfx_viewport.hpp"
-#include "app/debug.hpp"
-
-class resize_filter : public QAbstractNativeEventFilter {
-public:
-    Funkin::Render::QT::gfx_viewport* target = nullptr;
-    HWND top_level_hwnd = nullptr;
-
-    bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *) override {
-        if (eventType != "windows_generic_MSG") return false;
-        auto* msg = static_cast<MSG*>(message);
-        if (msg->message == WM_SIZE && target && msg->hwnd == top_level_hwnd) {
-            const int w = LOWORD(msg->lParam);
-            const int h = HIWORD(msg->lParam);
-            target->force_resize(w, h);
-        }
-        return false;
-    }
-};
+#include "render/graphics/gfx_device.hpp"
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
-    qmlRegisterType<Funkin::Render::QT::gfx_viewport>("Funkin.Render", 1, 0, "Render");
 
-    QQmlApplicationEngine engine;
-    Funkin::App::Debug* debug = new Funkin::App::Debug(&app);
-    engine.rootContext()->setContextProperty("Debug", debug);
+    bool ok = Funkin::Render::GFX::gfx_device::instance().init(
+        #ifdef FUNKIN_DEBUG
+            true
+        #else
+            false
+        #endif
+    );
+    LOG_PRINT("device init result: {}", ok);
 
-    const QUrl url(QStringLiteral("qrc:/main/main.qml"));
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
-        &app, []() { QCoreApplication::exit(-1); },
-        Qt::QueuedConnection);
-
-    QQuickWindow::setDefaultAlphaBuffer(true);
-    engine.load(url);
-
-    auto* filter = new resize_filter();
-    if (!engine.rootObjects().isEmpty()) {
-        auto* root_window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
-        if (root_window) {
-            auto* vp = root_window->findChild<Funkin::Render::QT::gfx_viewport*>("viewport");
-            filter->target = vp;
-            filter->top_level_hwnd = reinterpret_cast<HWND>(root_window->winId());
-
-            if (vp) {
-                QObject::connect(root_window, &QQuickWindow::closing, vp, [vp](QQuickCloseEvent*) {
-                    vp->shutdown();
-                });
-            }
-        }
-    }
-    app.installNativeEventFilter(filter);
 
     return app.exec();
 }
