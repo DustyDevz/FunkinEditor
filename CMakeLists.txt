@@ -16,10 +16,12 @@ set(DILIGENT_BUILD_FX OFF CACHE BOOL "Build DiligentFX module" FORCE)
 set(DILIGENT_BUILD_SAMPLES OFF CACHE BOOL "Build DiligentSamples module" FORCE)
 set(DILIGENT_BUILD_DOCS OFF CACHE BOOL "Build documentation" FORCE)
 
-set(DILIGENT_NO_DIRECT3D11 ON CACHE BOOL "Disable Direct3D11" FORCE)
-set(DILIGENT_NO_DIRECT3D12 ON CACHE BOOL "Disable Direct3D12" FORCE)
-set(DILIGENT_NO_VULKAN OFF CACHE BOOL "Enable Vulkan" FORCE)
-set(DILIGENT_NO_GL OFF CACHE BOOL "Enable OpenGL/GLES" FORCE)
+set(DILIGENT_NO_METAL ON CACHE BOOL "Disable Metal" FORCE)
+set(DILIGENT_NO_WEBGPU ON CACHE BOOL "Disable WebGPU" FORCE)
+set(DILIGENT_NO_ARCHIVER ON CACHE BOOL "Disable Archiver" FORCE)
+set(DILIGENT_NO_RENDER_STATE_PACKAGER ON CACHE BOOL "Disable Packager" FORCE)
+
+set(DILIGENT_BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 
 add_subdirectory("funkin/libs/diligent")
 
@@ -37,16 +39,58 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
         "funkin/include/*.hpp"
 )
 add_executable(FunkinEditor ${ENGINE_SOURCES})
-
 target_link_libraries(FunkinEditor PRIVATE
         Qt6::Core
         Qt6::Gui
         Qt6::Qml
         Qt6::Quick
         Vulkan::Vulkan
-        Diligent-GraphicsEngineVk-static
+        Diligent-GraphicsEngine
 )
+
+if(MSVC)
+    set_property(TARGET FunkinEditor APPEND_STRING PROPERTY LINK_FLAGS_RELEASE " /INCREMENTAL:NO /PDBALTPATH:%_PDB%")
+    set_property(TARGET FunkinEditor APPEND_STRING PROPERTY LINK_FLAGS_MINSIZEREL " /INCREMENTAL:NO /PDBALTPATH:%_PDB%")
+endif()
 
 target_include_directories(FunkinEditor PRIVATE
         "${CMAKE_SOURCE_DIR}/funkin/include"
+)
+
+get_target_property(_qt_core_location Qt6::Core IMPORTED_LOCATION_RELEASE)
+get_filename_component(_qt_bin_dir "${_qt_core_location}" DIRECTORY)
+get_filename_component(_qt_root_dir "${_qt_bin_dir}" DIRECTORY)
+
+set(COMPILER_DEPENDENT_DLL_COMMANDS "")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR MINGW)
+    get_filename_component(_mingw_bin_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    set(COMPILER_DEPENDENT_DLL_COMMANDS
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_mingw_bin_dir}/libwinpthread-1.dll" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_mingw_bin_dir}/libgcc_s_seh-1.dll" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_mingw_bin_dir}/libstdc++-6.dll" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
+    )
+endif()
+
+set(QT_CORE_DLLS
+        Qt6Core.dll Qt6Gui.dll Qt6Qml.dll Qt6QmlMeta.dll Qt6Quick.dll
+        Qt6OpenGL.dll Qt6Network.dll Qt6QmlModels.dll Qt6QmlWorkerScript.dll
+)
+
+set(QT_COPY_COMMANDS "")
+foreach(_dll ${QT_CORE_DLLS})
+    list(APPEND QT_COPY_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_qt_bin_dir}/${_dll}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/")
+endforeach()
+
+add_custom_command(TARGET FunkinEditor POST_BUILD
+        ${COMPILER_DEPENDENT_DLL_COMMANDS}
+        ${QT_COPY_COMMANDS}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/platforms"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_qt_root_dir}/plugins/platforms/qwindows.dll" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/platforms/"
+        COMMAND "${_qt_bin_dir}/windeployqt.exe"
+        --qmldir "${CMAKE_SOURCE_DIR}"
+        --verbose 1
+        --no-compiler-runtime
+        --no-translations
+        --no-opengl-sw
+        "$<TARGET_FILE:FunkinEditor>"
 )

@@ -1,10 +1,11 @@
-/*
- FunkinC++ Engine
- Copyright (©) 2026 Dusty. All rights reserved.
+//FunkinC++ Engine
+//Copyright (©) 2026 Dusty. All rights reserved.
+//This program is licensed under the GNU Affero General Public License v3.0 and is distributed WITHOUT ANY WARRANTY.
+//For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 
- This program is licensed under the GNU Affero General Public License v3.0 and is distributed WITHOUT ANY WARRANTY.
- For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
-*/
+// this installer is just temp for now
+// in the future if i ever have time ill rewrite this from scratch with a better compression and ui in c++
+// inno is very good but i like having more control on stuff i make
 
 #ifndef AppVersion
   #define AppVersion "0.0.1"
