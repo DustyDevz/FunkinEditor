@@ -19,11 +19,7 @@
 #include <iostream>
 #include <algorithm>
 
-// graphics
-#include <bgfx/bgfx.h>
-#include <bx/platform.h>
-#include <bx/bx.h>
-#include <bx/math.h>
+// diligent
 
 // qt
 #include <QObject>

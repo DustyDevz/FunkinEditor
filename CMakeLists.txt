@@ -20,12 +20,11 @@ set(DILIGENT_NO_METAL ON CACHE BOOL "" FORCE)
 set(DILIGENT_NO_WEBGPU ON CACHE BOOL "" FORCE)
 set(DILIGENT_NO_ARCHIVER ON CACHE BOOL "" FORCE)
 set(DILIGENT_NO_RENDER_STATE_PACKAGER ON CACHE BOOL "" FORCE)
-
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory("funkin/libs/diligent")
 
-if(WIN32 AND TARGET Diligent-Win32Platform)
+if(MINGW AND TARGET Diligent-Win32Platform)
     target_compile_options(Diligent-Win32Platform PRIVATE
             -include "${CMAKE_SOURCE_DIR}/funkin/cmake/thread_desc_compat.h"
     )
@@ -39,16 +38,20 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
         "funkin/include/*.hpp"
 )
 add_executable(FunkinEditor ${ENGINE_SOURCES})
+
+target_compile_definitions(FunkinEditor PRIVATE ENGINE_DLL=1 PLATFORM_WIN32=1 $<$<CONFIG:Debug>:FUNKIN_DEBUG>)
+
 target_link_libraries(FunkinEditor PRIVATE
         Qt6::Core
         Qt6::Gui
         Qt6::Qml
         Qt6::Quick
         Vulkan::Vulkan
+        Diligent-Primitives
         Diligent-Common
-        Diligent-Win32Platform
+        Diligent-GraphicsTools
         Diligent-GraphicsEngine
-        Diligent-GraphicsEngineVk-static
+        Diligent-GraphicsEngineVk-shared
 )
 
 if(MSVC)
@@ -89,11 +92,12 @@ add_custom_command(TARGET FunkinEditor POST_BUILD
         ${QT_COPY_COMMANDS}
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/platforms"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_qt_root_dir}/plugins/platforms/qwindows.dll" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/platforms/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:Diligent-GraphicsEngineVk-shared>" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
         COMMAND "${_qt_bin_dir}/windeployqt.exe"
         --qmldir "${CMAKE_SOURCE_DIR}"
         --verbose 1
         --no-compiler-runtime
         --no-translations
         --no-opengl-sw
-        "$<TARGET_FILE:FunkinEditor>"
+        "$<TARGET_FILE:FunkinEditor>" || ${CMAKE_COMMAND} -E true
 )

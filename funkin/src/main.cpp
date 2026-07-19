@@ -7,8 +7,20 @@
 */
 
 #include <QGuiApplication>
+#include "render/graphics/graphics_device.hpp"
+#include "utils/log.hpp"
 
 int main(int argc, char* argv[]) {
-    QGuiApplication app(argc, argv);
-    return app.exec();
+    auto& device = Funkin::Render::GFX::graphics_device::instance();
+    bool ok = device.init(false);
+    LOG_PRINT("device result: {}", ok);
+
+    if (ok) {
+        device.shutdown();
+    }
+
+    return ok ? 0 : -1;
+
+    // QGuiApplication app(argc, argv);
+    // return app.exec();
 }
