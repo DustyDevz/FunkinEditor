@@ -59,6 +59,10 @@ if(MSVC)
     set_property(TARGET FunkinEditor APPEND_STRING PROPERTY LINK_FLAGS_MINSIZEREL " /INCREMENTAL:NO /PDBALTPATH:%_PDB%")
 endif()
 
+target_precompile_headers(FunkinEditor PRIVATE
+        "${CMAKE_SOURCE_DIR}/funkin/include/utils/pch.hpp"
+)
+
 target_include_directories(FunkinEditor PRIVATE
         "${CMAKE_SOURCE_DIR}/funkin/include"
 )

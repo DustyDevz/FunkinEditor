@@ -9,6 +9,8 @@ FunkinC++ Engine
 #include "render/graphics/graphics_device.hpp"
 #include <EngineFactoryVk.h>
 
+#include "CommandQueueVk.h"
+#include "RenderDeviceVk.h"
 #include "utils/log.hpp"
 
 namespace Funkin::Render::Graphics {
@@ -49,6 +51,41 @@ namespace Funkin::Render::Graphics {
 
         LOG_PRINT("init OK");
         return true;
+    }
+
+    graphics_device::native_vk_handles graphics_device::get_native_vk_handles() const {
+        native_vk_handles vk_handles{};
+        if (!m_device_ || !m_context_) {
+            LOG_CRIT("get_native_vk_handles FAILED");
+            return vk_handles;
+        }
+
+        Diligent::RefCntAutoPtr<Diligent::IRenderDeviceVk> device_vk{m_device_, Diligent::IID_RenderDeviceVk};
+        if (!device_vk) {
+            LOG_CRIT("get_native_vk_handles FAILED");
+            return vk_handles;
+        }
+
+        vk_handles.instance        = device_vk->GetVkInstance();
+        vk_handles.physical_device = device_vk->GetVkPhysicalDevice();
+        vk_handles.device          = device_vk->GetVkDevice();
+
+        Diligent::ICommandQueue* raw_queue = m_context_->LockCommandQueue();
+        if (raw_queue) {
+            Diligent::RefCntAutoPtr<Diligent::ICommandQueueVk> cmd_queue_vk{raw_queue, Diligent::IID_CommandQueueVk};
+            if (cmd_queue_vk) {
+                vk_handles.queue              = cmd_queue_vk->GetVkQueue();
+                vk_handles.queue_family_index = cmd_queue_vk->GetQueueFamilyIndex();
+                vk_handles.queue_index        = 0;
+            } else {
+                LOG_CRIT("cmd_queue_vk query interface FAILED");
+            }
+            m_context_->UnlockCommandQueue();
+        } else {
+            LOG_CRIT("lock_command_queue FAILED");
+        }
+
+        return vk_handles;
     }
 
     void graphics_device::shutdown() {

@@ -39,6 +39,10 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    auto handles = graphics_device.get_native_vk_handles();
+    LOG_PRINT("vk instance={:p} phys={:p} device={:p} queue={:p} family={}",
+        handles.instance, handles.physical_device, handles.device, handles.queue, handles.queue_family_index);
+
     QTimer timer;
     QObject::connect(&timer, &QTimer::timeout, [&]() {
         graphics_context.begin_frame(.1f, .6f, .1f, 1.f);

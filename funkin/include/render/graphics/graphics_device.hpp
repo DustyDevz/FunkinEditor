@@ -11,6 +11,9 @@
 #include <RenderDevice.h>
 #include <DeviceContext.h>
 #include <EngineFactoryVk.h>
+#include <RenderDeviceVk.h>
+#include <CommandQueueVk.h>
+#include <vulkan/vulkan.h>
 
 namespace Funkin::Render::Graphics {
    class graphics_device {
@@ -24,6 +27,16 @@ namespace Funkin::Render::Graphics {
        Diligent::IRenderDevice*    device()  const { return m_device_; }
        Diligent::IDeviceContext*   context() const { return m_context_; }
        Diligent::IEngineFactoryVk* factory() const { return m_factory_; }
+
+       struct native_vk_handles {
+           void*    instance           = nullptr; // VkInstance
+           void*    physical_device    = nullptr; // VkPhysicalDevice
+           void*    device             = nullptr; // VkDevice
+           void*    queue              = nullptr; // VkQueue
+           uint32_t queue_family_index = 0;
+           uint32_t queue_index        = 0;
+       };
+       native_vk_handles get_native_vk_handles() const;
 
    private:
        graphics_device() = default;
