@@ -12,7 +12,7 @@
 #include <DeviceContext.h>
 #include <EngineFactoryVk.h>
 
-namespace Funkin::Render::GFX {
+namespace Funkin::Render::Graphics {
    class graphics_device {
    public:
        static graphics_device& instance();

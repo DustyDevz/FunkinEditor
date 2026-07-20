@@ -11,7 +11,7 @@ FunkinC++ Engine
 
 #include "utils/log.hpp"
 
-namespace Funkin::Render::GFX {
+namespace Funkin::Render::Graphics {
     graphics_device &graphics_device::instance() {
         static graphics_device instance;
         return instance;

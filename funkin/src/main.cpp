@@ -7,20 +7,47 @@
 */
 
 #include <QGuiApplication>
+#include <QWindow>
+#include <Qtimer>
+
+#include "render/graphics/graphics_context.hpp"
 #include "render/graphics/graphics_device.hpp"
 #include "utils/log.hpp"
 
 int main(int argc, char* argv[]) {
-    auto& device = Funkin::Render::GFX::graphics_device::instance();
-    bool ok = device.init(false);
-    LOG_PRINT("device result: {}", ok);
+  QGuiApplication app(argc, argv);
 
-    if (ok) {
-        device.shutdown();
+    auto& graphics_device = Funkin::Render::Graphics::graphics_device::instance();
+    if (!graphics_device.init(true)) {
+        LOG_CRIT("device init FAILED");
+        return -1;
     }
 
-    return ok ? 0 : -1;
+    // temp
+    int w = 1280;
+    int h = 720;
+    //
 
-    // QGuiApplication app(argc, argv);
-    // return app.exec();
+    QWindow window;
+    window.setTitle("Funkin");
+    window.resize(w, h);
+    window.show();
+
+    Funkin::Render::Graphics::graphics_context graphics_context;
+    if (!graphics_context.init(reinterpret_cast<void*>(window.winId()), w, h)) {
+        LOG_CRIT("graphics context init FAILED");
+        return -1;
+    }
+
+    QTimer timer;
+    QObject::connect(&timer, &QTimer::timeout, [&]() {
+        graphics_context.begin_frame(.1f, .6f, .1f, 1.f);
+        graphics_context.present();
+    });
+    timer.start(16); // 60
+
+    int result = app.exec();
+    graphics_context.shutdown();
+    graphics_device.shutdown();
+    return result;
 }
