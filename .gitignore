@@ -1,3 +1,5 @@
 .idea/
 .cmake/
+.vs/
+out/
 export/

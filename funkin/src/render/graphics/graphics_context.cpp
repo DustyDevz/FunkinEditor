@@ -70,9 +70,13 @@ namespace Funkin::Render::Graphics {
 
         if (auto* graphics_context = graphics_device::instance().context()) {
             graphics_context->Flush();
+            graphics_context->WaitForIdle();
         }
 
-        m_swap_chain.Release();
+        if (m_swap_chain) {
+            m_swap_chain.Release();
+        }
+
         m_is_initialized = false;
         LOG_PRINT("shutdown OK");
     }
@@ -83,7 +87,7 @@ namespace Funkin::Render::Graphics {
     }
 
     void graphics_context::begin_frame(float r, float g, float b, float a) {
-        if (!m_is_initialized) return;
+        if (!m_is_initialized || !m_swap_chain) return;
 
         auto* graphics_context = graphics_device::instance().context();
         if (!graphics_context) return;
