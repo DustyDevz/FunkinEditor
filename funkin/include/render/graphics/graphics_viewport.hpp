@@ -26,6 +26,7 @@ namespace Funkin::Render::Graphics {
 
     protected:
         QSGNode* updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*) override;
+        void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     private:
         graphics_context* m_context_ = nullptr;
@@ -33,5 +34,9 @@ namespace Funkin::Render::Graphics {
         VkImage m_last_vk_image_ = VK_NULL_HANDLE;
 
         bool m_texture_dirty_ = true;
+        bool m_size_dirty_ = false;
+
+        uint32_t m_pending_width_ = 0;
+        uint32_t m_pending_height_ = 0;
     };
 }

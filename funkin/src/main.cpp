@@ -63,6 +63,14 @@ int main(int argc, char* argv[]) {
         viewport->setParentItem(quick_window.contentItem());
         viewport->setSize(QSizeF(1280, 720));
 
+        QObject::connect(&quick_window, &QQuickWindow::widthChanged, viewport, [viewport, &quick_window]() {
+            viewport->setWidth(quick_window.width());
+        });
+
+        QObject::connect(&quick_window, &QQuickWindow::heightChanged, viewport, [viewport, &quick_window]() {
+            viewport->setHeight(quick_window.height());
+        });
+
         QObject::connect(&quick_window, &QQuickWindow::beforeRenderPassRecording, &quick_window, [&graphics_context]() {
             graphics_context.begin_frame(0.2f, 0.4f, 0.8f, 1.0f);
             graphics_context.end_frame();

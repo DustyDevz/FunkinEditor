@@ -21,6 +21,24 @@ namespace Funkin::Render::Graphics {
         m_texture_dirty_ = true;
     }
 
+    void graphics_viewport::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) {
+        QQuickItem::geometryChange(newGeometry, oldGeometry);
+
+        if (newGeometry.size() != oldGeometry.size()) {
+            const auto dpr = window() ? window()->devicePixelRatio() : 1.;
+            const uint32_t new_w = static_cast<uint32_t>(newGeometry.width() * dpr);
+            const uint32_t new_h = static_cast<uint32_t>(newGeometry.height() * dpr);
+
+            if (new_w > 0 && new_h > 0) {
+                m_pending_width_ = new_w;
+                m_pending_height_ = new_h;
+                m_size_dirty_ = true;
+
+                update();
+            }
+        }
+    }
+
     QSGNode *graphics_viewport::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData *) {
         auto* node = static_cast<QSGSimpleTextureNode*>(oldNode);
         if (!node) {
@@ -28,6 +46,12 @@ namespace Funkin::Render::Graphics {
         }
 
         if (!m_context_ || !window()) return node;
+
+        if (m_size_dirty_) {
+            m_context_->resize(m_pending_width_, m_pending_height_);
+            m_size_dirty_ = false;
+            m_texture_dirty_ = true;
+        }
 
         VkImage vk_image = m_context_->get_vk_image();
         if (vk_image == VK_NULL_HANDLE) return node;
@@ -52,8 +76,10 @@ namespace Funkin::Render::Graphics {
             node->setOwnsTexture(false);
         }
 
+        node->setFiltering(QSGTexture::Linear);
         node->setRect(boundingRect());
-        node->markDirty(QSGNode::DirtyMaterial);
+        node->setSourceRect(QRectF(0.0f, 0.0f, 1.0f, 1.0f));
+        node->markDirty(QSGNode::DirtyMaterial | QSGNode::DirtyGeometry);
         return node;
     }
 }
