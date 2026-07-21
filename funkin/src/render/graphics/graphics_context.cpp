@@ -18,91 +18,98 @@ namespace Funkin::Render::Graphics {
         shutdown();
     }
 
-    bool graphics_context::init(void *native_window_handle, uint16_t w, uint16_t h) {
+    bool graphics_context::init(uint32_t width, uint32_t height) {
         if (m_is_initialized) return true;
 
-        if (!native_window_handle) {
-            LOG_CRIT("init FAILED, native_window_handle is null");
+        if (!create_targets(width, height)) {
+            LOG_CRIT("Failed to create offscreen render targets");
             return false;
         }
 
-        auto& device = graphics_device::instance();
-        if (!device.is_initialized()) {
-            LOG_CRIT("init FAILED, graphics device is not initialized");
-            return false;
-        }
-
-        Diligent::SwapChainDesc sc_desc{};
-        sc_desc.Width = w;
-        sc_desc.Height = h;
-        sc_desc.ColorBufferFormat = Diligent::TEX_FORMAT_RGBA8_UNORM_SRGB;
-        sc_desc.DepthBufferFormat = Diligent::TEX_FORMAT_D32_FLOAT;
-
-        Diligent::Win32NativeWindow window { static_cast<HWND>(native_window_handle) };
-        Diligent::IEngineFactoryVk* factory_vk = device.factory();
-        if (!factory_vk) {
-            LOG_CRIT("init FAILED, graphics device factory is null");
-            return false;
-        }
-
-        Diligent::ISwapChain* raw_swap_chain = nullptr;
-        factory_vk->CreateSwapChainVk(
-            device.device(),
-            device.context(),
-            sc_desc,
-            window,
-            &raw_swap_chain);
-
-        if (!raw_swap_chain) {
-            LOG_CRIT("init FAILED, failed to create swap chain");
-            return false;
-        }
-
-        m_swap_chain.Attach(raw_swap_chain);
         m_is_initialized = true;
-
-        LOG_PRINT("init OK (w={}, h={})", w, h);
+        LOG_PRINT("graphics_context offscreen init OK ({}x{})", width, height);
         return true;
     }
 
     void graphics_context::shutdown() {
         if (!m_is_initialized) return;
 
-        if (auto* graphics_context = graphics_device::instance().context()) {
-            graphics_context->Flush();
-            graphics_context->WaitForIdle();
+        if (auto* context = graphics_device::instance().context()) {
+            context->Flush();
+            context->WaitForIdle();
         }
 
-        if (m_swap_chain) {
-            m_swap_chain.Release();
-        }
-
+        m_render_target.Release();
+        m_depth_buffer.Release();
         m_is_initialized = false;
-        LOG_PRINT("shutdown OK");
+        LOG_PRINT("graphics_context shutdown OK");
     }
 
-    void graphics_context::resize(uint16_t w, uint16_t h) {
-        if (!m_is_initialized || !m_swap_chain) return;
-        m_swap_chain->Resize(w, h);
+    void graphics_context::resize(uint32_t width, uint32_t height) {
+        if (!m_is_initialized || (width == m_width && height == m_height)) return;
+        create_targets(width, height);
     }
 
     void graphics_context::begin_frame(float r, float g, float b, float a) {
-        if (!m_is_initialized || !m_swap_chain) return;
+        if (!m_is_initialized) return;
 
-        auto* graphics_context = graphics_device::instance().context();
-        if (!graphics_context) return;
+        auto* context = graphics_device::instance().context();
+        if (!context) return;
 
-        auto* rtv = m_swap_chain->GetCurrentBackBufferRTV();
-        auto* dsv = m_swap_chain->GetDepthBufferDSV();
-        graphics_context->SetRenderTargets(1, &rtv, dsv, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        auto* rtv = m_render_target->GetDefaultView(Diligent::TEXTURE_VIEW_RENDER_TARGET);
+        auto* dsv = m_depth_buffer->GetDefaultView(Diligent::TEXTURE_VIEW_DEPTH_STENCIL);
+
+        context->SetRenderTargets(1, &rtv, dsv, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
         const float clear_color[4] = { r, g, b, a };
-        graphics_context->ClearRenderTarget(rtv, clear_color, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-        graphics_context->ClearDepthStencil(dsv, Diligent::CLEAR_DEPTH_FLAG, 1.f, 0, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        context->ClearRenderTarget(rtv, clear_color, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        context->ClearDepthStencil(dsv, Diligent::CLEAR_DEPTH_FLAG, 1.0f, 0, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     }
 
-    void graphics_context::present() {
-        if (!m_is_initialized || !m_swap_chain) return;
-        m_swap_chain->Present();
+    VkImage graphics_context::get_vk_image() const {
+        if (!m_render_target) return VK_NULL_HANDLE;
+
+        Diligent::RefCntAutoPtr<Diligent::ITextureVk> tex_vk{m_render_target, Diligent::IID_TextureVk};
+        return tex_vk ? tex_vk->GetVkImage() : VK_NULL_HANDLE;
+    }
+
+    void graphics_context::end_frame() {
+        if (!m_is_initialized) return;
+        auto* context = graphics_device::instance().context();
+        if (context) {
+            context->Flush();
+        }
+    }
+
+    bool graphics_context::create_targets(uint32_t width, uint32_t height) {
+        auto* device = graphics_device::instance().device();
+        if (!device) return false;
+
+        m_render_target.Release();
+        m_depth_buffer.Release();
+
+        Diligent::TextureDesc color_desc{};
+        color_desc.Name      = "Offscreen Color Target";
+        color_desc.Type      = Diligent::RESOURCE_DIM_TEX_2D;
+        color_desc.Width     = width;
+        color_desc.Height    = height;
+        color_desc.Format    = Diligent::TEX_FORMAT_RGBA8_UNORM;
+        color_desc.BindFlags = Diligent::BIND_RENDER_TARGET | Diligent::BIND_SHADER_RESOURCE;
+
+        device->CreateTexture(color_desc, nullptr, &m_render_target);
+
+        Diligent::TextureDesc depth_desc{};
+        depth_desc.Name      = "Offscreen Depth Buffer";
+        depth_desc.Type      = Diligent::RESOURCE_DIM_TEX_2D;
+        depth_desc.Width     = width;
+        depth_desc.Height    = height;
+        depth_desc.Format    = Diligent::TEX_FORMAT_D32_FLOAT;
+        depth_desc.BindFlags = Diligent::BIND_DEPTH_STENCIL;
+
+        device->CreateTexture(depth_desc, nullptr, &m_depth_buffer);
+
+        m_width  = width;
+        m_height = height;
+        return (m_render_target && m_depth_buffer);
     }
 }
