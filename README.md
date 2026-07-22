@@ -1,4 +1,4 @@
-# Funkin C++ (Rewrite 5)
+# Funkin C++ (Rewrite 6)
 I only have this repo public because why not, do not download this (it does NOTHING)
 
 > [!WARNING]
@@ -11,8 +11,27 @@ This is just here so my dumbass can remember
 
 ---
 
+# Latest progress
+## 7 / 22 / 26
+* Rewrite (again)
+* Switched renderering framework BGFX -> Diligent
+* Improved performance
+* Window
+<img width="1919" height="1044" alt="image" src="https://github.com/user-attachments/assets/63a1076e-d79b-45a4-bc9f-2aa8745a38b3" />
+
+# Archives
+
 <details>
-<summary>OLD ENGINE</summary>
+<summary>Current</summary>
+
+#
+
+</details>
+
+#
+
+<details>
+<summary>Old engine</summary>
   
 ## 6 / 11 / 26
 * 200 commits
