@@ -53,6 +53,23 @@ namespace Funkin::Render::Graphics {
     void graphics_context::begin_frame(float r, float g, float b, float a) {
         if (!m_is_initialized) return;
 
+        // TEMP DEBUGGING //
+        auto now = std::chrono::high_resolution_clock::now();
+        if (m_last_time_.time_since_epoch().count() > 0) {
+            std::chrono::duration<double, std::milli> delta = now - m_last_time_;
+            m_accumulated_time_ += delta.count();
+            m_frame_count_++;
+
+            if (m_accumulated_time_ >= 200.) {
+                m_frame_time_ms_ = m_accumulated_time_ / m_frame_count_;
+                m_fps_ = 1000.0 / m_frame_time_ms_;
+                m_accumulated_time_ = 0.0;
+                m_frame_count_ = 0;
+            }
+        }
+        m_last_time_ = now;
+        // TEMP DEBUGGING //
+
         auto* context = graphics_device::instance().context();
         if (!context) return;
 

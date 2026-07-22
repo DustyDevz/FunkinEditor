@@ -1,5 +1,5 @@
 /*
-FunkinC++ Engine
+ FunkinC++ Engine
  Copyright (©) 2026 Dusty. All rights reserved.
 
  This program is licensed under the GNU Affero General Public License v3.0 and is distributed WITHOUT ANY WARRANTY.
@@ -7,19 +7,14 @@ FunkinC++ Engine
 */
 
 #include <QGuiApplication>
-#include <QQuickWindow>
-#include <QQuickGraphicsDevice>
-#include <QVulkanInstance>
+#include <QWindow>
+#include <QTimer>
 
 #include "render/graphics/graphics_context.hpp"
 #include "render/graphics/graphics_device.hpp"
-#include "render/graphics/graphics_viewport.hpp"
 #include "utils/log.hpp"
 
 int main(int argc, char* argv[]) {
-    qputenv("QSG_RHI_BACKEND", "vulkan");
-    qputenv("QSG_INFO", "1");
-
     QGuiApplication app(argc, argv);
 
     auto& graphics_device = Funkin::Render::Graphics::graphics_device::instance();
@@ -28,7 +23,6 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    auto handles = graphics_device.get_native_vk_handles();
     Funkin::Render::Graphics::graphics_context graphics_context;
     if (!graphics_context.init(1280, 720)) {
         LOG_CRIT("context init FAILED");
@@ -36,55 +30,33 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    int result = 0;
+    QWindow window;
+    window.setTitle("test, hi");
+    window.resize(1280, 720);
+    window.show();
 
-    {
-        QVulkanInstance vulkan_instance;
-        vulkan_instance.setVkInstance(static_cast<VkInstance>(handles.instance));
-        if (!vulkan_instance.create()) {
-            LOG_CRIT("q_vulkan_instance creation FAILED");
-            graphics_device.shutdown();
-            return -1;
+    QTimer render_timer;
+    render_timer.setTimerType(Qt::PreciseTimer);
+    QObject::connect(&render_timer, &QTimer::timeout, &window, [&graphics_context, &window]() {
+        graphics_context.begin_frame(0.2f, 0.4f, 0.8f, 1.0f);
+        graphics_context.end_frame();
+
+        static int frame = 0;
+        static auto last = std::chrono::steady_clock::now();
+        frame++;
+        auto now = std::chrono::steady_clock::now();
+        double elapsed = std::chrono::duration<double>(now - last).count();
+        if (elapsed >= 1.0) {
+            QString title = QString("hi | FPS: %1")
+                                .arg(frame / elapsed, 0, 'f', 1);
+            window.setTitle(title);
+            frame = 0;
+            last = now;
         }
+    });
+    render_timer.start(0);
 
-        QQuickWindow quick_window;
-        quick_window.setVulkanInstance(&vulkan_instance);
-
-        QQuickGraphicsDevice quick_graphics_device = QQuickGraphicsDevice::fromDeviceObjects(
-            static_cast<VkPhysicalDevice>(handles.physical_device),
-            static_cast<VkDevice>(handles.device),
-            static_cast<int>(handles.queue_family_index),
-            static_cast<int>(handles.queue_index)
-        );
-        quick_window.setGraphicsDevice(quick_graphics_device);
-
-        auto* viewport = new Funkin::Render::Graphics::graphics_viewport();
-        viewport->set_graphics_context(&graphics_context);
-        viewport->setParentItem(quick_window.contentItem());
-        viewport->setSize(QSizeF(1280, 720));
-
-        QObject::connect(&quick_window, &QQuickWindow::widthChanged, viewport, [viewport, &quick_window]() {
-            viewport->setWidth(quick_window.width());
-        });
-
-        QObject::connect(&quick_window, &QQuickWindow::heightChanged, viewport, [viewport, &quick_window]() {
-            viewport->setHeight(quick_window.height());
-        });
-
-        QObject::connect(&quick_window, &QQuickWindow::beforeRenderPassRecording, &quick_window, [&graphics_context]() {
-            graphics_context.begin_frame(0.2f, 0.4f, 0.8f, 1.0f);
-            graphics_context.end_frame();
-        }, Qt::DirectConnection);
-
-        QObject::connect(&quick_window, &QQuickWindow::afterRendering, &quick_window, [&quick_window]() {
-            quick_window.update();
-        }, Qt::QueuedConnection);
-
-        quick_window.resize(1280, 720);
-        quick_window.show();
-        result = app.exec();
-    }
-
+    int result = app.exec();
     graphics_context.shutdown();
     graphics_device.shutdown();
     return result;

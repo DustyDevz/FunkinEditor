@@ -43,9 +43,13 @@ namespace Funkin::Render::Graphics {
         auto* node = static_cast<QSGSimpleTextureNode*>(oldNode);
         if (!node) {
             node = new QSGSimpleTextureNode();
+            node->setFiltering(QSGTexture::Linear);
+            node->setSourceRect(QRectF(0.0f, 0.0f, 1.0f, 1.0f));
         }
 
         if (!m_context_ || !window()) return node;
+
+        bool geometry_changed = false;
 
         if (m_size_dirty_) {
             m_context_->resize(m_pending_width_, m_pending_height_);
@@ -74,12 +78,15 @@ namespace Funkin::Render::Graphics {
 
             node->setTexture(m_sg_texture_);
             node->setOwnsTexture(false);
+            node->markDirty(QSGNode::DirtyMaterial);
+            geometry_changed = true;
         }
 
-        node->setFiltering(QSGTexture::Linear);
-        node->setRect(boundingRect());
-        node->setSourceRect(QRectF(0.0f, 0.0f, 1.0f, 1.0f));
-        node->markDirty(QSGNode::DirtyMaterial | QSGNode::DirtyGeometry);
+        if (geometry_changed || node->rect() != boundingRect()) {
+            node->setRect(boundingRect());
+            node->markDirty(QSGNode::DirtyGeometry);
+        }
+
         return node;
     }
 }

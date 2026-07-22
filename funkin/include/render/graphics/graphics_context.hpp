@@ -28,6 +28,11 @@ namespace Funkin::Render::Graphics {
       void begin_frame(float r = 0.1f, float g = 0.1f, float b = 0.1f, float a = 1.0f);
       void end_frame();
 
+      // TEMP DEBUGGING //
+      double get_fps() const { return m_fps_; }
+      double get_frame_time_ms() const { return m_frame_time_ms_; }\
+      // TEMP DEBUGGING //
+
       VkImage get_vk_image() const;
       uint32_t width() const { return m_width; }
       uint32_t height() const { return m_height; }
@@ -36,6 +41,14 @@ namespace Funkin::Render::Graphics {
 
       Diligent::RefCntAutoPtr<Diligent::ITexture> m_render_target;
       Diligent::RefCntAutoPtr<Diligent::ITexture> m_depth_buffer;
+
+      // TEMP DEBUGGING //
+      std::chrono::high_resolution_clock::time_point m_last_time_{};
+      double m_fps_ = 0.0;
+      double m_frame_time_ms_ = 0.0;
+      double m_accumulated_time_ = 0.0;
+      uint32_t m_frame_count_ = 0;
+      // TEMP DEBUGGING //
 
       uint32_t m_width  = 0;
       uint32_t m_height = 0;
