@@ -4,7 +4,7 @@
 //For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 
 // this installer is just temp for now
-// in the future if i ever have time ill rewrite this from scratch with a better compression and ui in c++
+// in the future if i ever have time ill rewrite this from scratch with improved compression/ui in c++
 // inno is very good but i like having more control on stuff i make
 
 #ifndef AppVersion
