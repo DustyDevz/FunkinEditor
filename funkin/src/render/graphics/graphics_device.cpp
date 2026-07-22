@@ -99,6 +99,7 @@ namespace Funkin::Render::Graphics {
         swap_chain_desc.Height = height;
         swap_chain_desc.ColorBufferFormat = Diligent::TEX_FORMAT_RGBA8_UNORM_SRGB;
         swap_chain_desc.DepthBufferFormat = Diligent::TEX_FORMAT_D32_FLOAT;
+        swap_chain_desc.BufferCount = 3;
 
         Diligent::Win32NativeWindow native_window{hwnd};
         m_factory_->CreateSwapChainVk(m_device_, m_context_, swap_chain_desc, native_window, &m_swap_chain_);

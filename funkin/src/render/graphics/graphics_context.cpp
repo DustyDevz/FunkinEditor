@@ -55,7 +55,7 @@ namespace Funkin::Render::Graphics {
         auto* swap_chain = graphics_device::instance().swap_chain();
         if (!context || !swap_chain) return;
 
-        swap_chain->Present();
+        swap_chain->Present(0);
     }
 
     void graphics_context::begin_frame(float r, float g, float b, float a) {
@@ -95,8 +95,8 @@ namespace Funkin::Render::Graphics {
         context->SetRenderTargets(1, &rtv, dsv, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
         const float clear_color[4] = { r, g, b, a };
-        context->ClearRenderTarget(rtv, clear_color, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-        context->ClearDepthStencil(dsv, Diligent::CLEAR_DEPTH_FLAG, 1.0f, 0, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        context->ClearRenderTarget(rtv, clear_color, Diligent::RESOURCE_STATE_TRANSITION_MODE_VERIFY);
+        context->ClearDepthStencil(dsv, Diligent::CLEAR_DEPTH_FLAG, 1.0f, 0, Diligent::RESOURCE_STATE_TRANSITION_MODE_VERIFY);
     }
 
     VkImage graphics_context::get_vk_image() const {
@@ -108,10 +108,7 @@ namespace Funkin::Render::Graphics {
 
     void graphics_context::end_frame() {
         if (!m_is_initialized) return;
-        auto* context = graphics_device::instance().context();
-        if (context) {
-            context->Flush();
-        }
+        // cats
     }
 
     bool graphics_context::create_targets(uint32_t width, uint32_t height) {

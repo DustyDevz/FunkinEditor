@@ -8,7 +8,7 @@
 
 #include <QGuiApplication>
 #include <QWindow>
-#include <QTimer>
+#include <chrono>
 
 #include "render/graphics/graphics_context.hpp"
 #include "render/graphics/graphics_device.hpp"
@@ -41,30 +41,32 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    QTimer render_timer;
-    render_timer.setTimerType(Qt::PreciseTimer);
-    QObject::connect(&render_timer, &QTimer::timeout, &window, [&graphics_context, &window]() {
+    int frame = 0;
+    auto last = std::chrono::steady_clock::now();
+
+    bool running = true;
+    QObject::connect(&window, &QObject::destroyed, &app, [&running]() { running = false; });
+
+    while (running && !window.isVisible() == false) {
+        app.processEvents(QEventLoop::AllEvents);
+        if (!window.isVisible()) break;
+
         graphics_context.begin_frame(0.2f, 0.4f, 0.8f, 1.0f);
         graphics_context.end_frame();
         graphics_context.present();
 
-        static int frame = 0;
-        static auto last = std::chrono::steady_clock::now();
         frame++;
         auto now = std::chrono::steady_clock::now();
         double elapsed = std::chrono::duration<double>(now - last).count();
         if (elapsed >= 1.0) {
-            QString title = QString("hi | FPS: %1")
-                                .arg(frame / elapsed, 0, 'f', 1);
+            QString title = QString("hi | FPS: %1").arg(frame / elapsed, 0, 'f', 1);
             window.setTitle(title);
             frame = 0;
             last = now;
         }
-    });
-    render_timer.start(0);
+    }
 
-    int result = app.exec();
     graphics_context.shutdown();
     graphics_device.shutdown();
-    return result;
+    return 0;
 }
