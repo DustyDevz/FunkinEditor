@@ -35,11 +35,18 @@ int main(int argc, char* argv[]) {
     window.resize(1280, 720);
     window.show();
 
+    HWND hwnd = reinterpret_cast<HWND>(window.winId());
+    if (!graphics_device.create_swap_chain(hwnd, 1280, 720)) {
+        LOG_CRIT("swap_chain create FAILED");
+        return -1;
+    }
+
     QTimer render_timer;
     render_timer.setTimerType(Qt::PreciseTimer);
     QObject::connect(&render_timer, &QTimer::timeout, &window, [&graphics_context, &window]() {
         graphics_context.begin_frame(0.2f, 0.4f, 0.8f, 1.0f);
         graphics_context.end_frame();
+        graphics_context.present();
 
         static int frame = 0;
         static auto last = std::chrono::steady_clock::now();

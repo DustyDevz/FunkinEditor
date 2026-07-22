@@ -88,6 +88,30 @@ namespace Funkin::Render::Graphics {
         return vk_handles;
     }
 
+    bool graphics_device::create_swap_chain(void *hwnd, uint32_t width, uint32_t height) {
+        if (!m_device_ || !m_context_ || !m_factory_) {
+            LOG_CRIT("create_swap_chain FAILED, device not initialized");
+            return false;
+        }
+
+        Diligent::SwapChainDesc swap_chain_desc{};
+        swap_chain_desc.Width  = width;
+        swap_chain_desc.Height = height;
+        swap_chain_desc.ColorBufferFormat = Diligent::TEX_FORMAT_RGBA8_UNORM_SRGB;
+        swap_chain_desc.DepthBufferFormat = Diligent::TEX_FORMAT_D32_FLOAT;
+
+        Diligent::Win32NativeWindow native_window{hwnd};
+        m_factory_->CreateSwapChainVk(m_device_, m_context_, swap_chain_desc, native_window, &m_swap_chain_);
+
+        if (!m_swap_chain_) {
+            LOG_CRIT("create_swap_chain FAILED");
+            return false;
+        }
+
+        LOG_PRINT("create_swap_chain OK ({}, {})", width, height);
+        return true;
+    }
+
     void graphics_device::shutdown() {
         if (m_context_) {
             m_context_->Flush();

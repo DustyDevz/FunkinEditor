@@ -50,6 +50,14 @@ namespace Funkin::Render::Graphics {
         create_targets(width, height);
     }
 
+    void graphics_context::present() {
+        auto* context = graphics_device::instance().context();
+        auto* swap_chain = graphics_device::instance().swap_chain();
+        if (!context || !swap_chain) return;
+
+        swap_chain->Present();
+    }
+
     void graphics_context::begin_frame(float r, float g, float b, float a) {
         if (!m_is_initialized) return;
 
@@ -73,9 +81,17 @@ namespace Funkin::Render::Graphics {
         auto* context = graphics_device::instance().context();
         if (!context) return;
 
-        auto* rtv = m_render_target->GetDefaultView(Diligent::TEXTURE_VIEW_RENDER_TARGET);
-        auto* dsv = m_depth_buffer->GetDefaultView(Diligent::TEXTURE_VIEW_DEPTH_STENCIL);
+        auto* swap_chain = graphics_device::instance().swap_chain();
+        Diligent::ITextureView* rtv;
+        Diligent::ITextureView* dsv;
 
+        if (swap_chain) {
+            rtv = swap_chain->GetCurrentBackBufferRTV();
+            dsv = swap_chain->GetDepthBufferDSV();
+        } else {
+            rtv = m_render_target->GetDefaultView(Diligent::TEXTURE_VIEW_RENDER_TARGET);
+            dsv = m_depth_buffer ->GetDefaultView(Diligent::TEXTURE_VIEW_DEPTH_STENCIL);
+        }
         context->SetRenderTargets(1, &rtv, dsv, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
         const float clear_color[4] = { r, g, b, a };

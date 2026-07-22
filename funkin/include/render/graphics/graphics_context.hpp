@@ -8,7 +8,6 @@ FunkinC++ Engine
 
 #pragma once
 #include <RefCntAutoPtr.hpp>
-#include <SwapChain.h>
 #include <cstdint>
 #include "TextureVk.h"
 
@@ -24,6 +23,7 @@ namespace Funkin::Render::Graphics {
       bool init(uint32_t width, uint32_t height);
       void shutdown();
       void resize(uint32_t width, uint32_t height);
+      void present();
 
       void begin_frame(float r = 0.1f, float g = 0.1f, float b = 0.1f, float a = 1.0f);
       void end_frame();
