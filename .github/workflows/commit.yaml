@@ -1,0 +1,39 @@
+name: commit
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  fast-build:
+    runs-on: windows-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: masvc
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: ninja
+      uses: llvm/actions/install-ninja@main
+
+    - name: qt6
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.8.*'
+        arch: 'win64_msvc2022_64'
+        modules: 'qtdeclarative'
+
+    - name: cmake
+      run: >
+        cmake -B build
+        -G "Ninja"
+        -DCMAKE_BUILD_TYPE=Debug
+
+    - name: build
+      run: cmake --build build --config Debug --target FunkinEditor
