@@ -45,6 +45,13 @@ namespace Funkin {
 
     App::~App() {
         Input::Input::instance().shutdown();
+
+        auto* context = Render::Graphics::graphics_device::instance().context();
+        if (context) {
+            context->Flush();
+            context->FinishFrame();
+        }
+
         m_graphicsContext.shutdown();
         Render::Graphics::graphics_device::instance().shutdown();
     }
@@ -76,6 +83,12 @@ namespace Funkin {
         input.init();
         input.setWindow(&m_window);
 
+        QObject::connect(&m_window, &QWindow::visibleChanged, &m_qtApp, [this](bool visible) {
+            if (!visible) {
+                m_running = false;
+            }
+        });
+
         QObject::connect(&m_window, &QObject::destroyed, &m_qtApp, [this]() {
             m_running = false;
         });
@@ -90,6 +103,10 @@ namespace Funkin {
 
         while (m_running && m_window.isVisible()) {
             m_qtApp.processEvents(QEventLoop::AllEvents);
+
+            if (!m_running || !m_window.isVisible()) {
+                break;
+            }
 
             auto now = std::chrono::steady_clock::now();
             double dt = std::chrono::duration<double>(now - lastFrameTime).count();
@@ -108,6 +125,11 @@ namespace Funkin {
             }
         }
 
+        auto* context = Render::Graphics::graphics_device::instance().context();
+        if (context) {
+            context->Flush();
+        }
+
         return 0;
     }
 
@@ -115,12 +137,16 @@ namespace Funkin {
         auto& input = Input::Input::instance();
         input.update();
 
-        if (input.justDown(Input::KeyCode::G) || input.justDown("G")) {
+        if (input.justDown(Input::KeyCode::G)) {
             LOG_PRINT("G pressed! :3");
         }
     }
 
     void App::render() {
+        if (!m_running || !m_window.isVisible()) {
+            return;
+        }
+
         m_graphicsContext.begin_frame(0.2f, 0.4f, 0.8f, 1.0f);
         m_graphicsContext.end_frame();
         m_graphicsContext.present();

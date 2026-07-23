@@ -55,6 +55,9 @@ namespace Funkin::Render::Graphics {
         auto* swap_chain = graphics_device::instance().swap_chain();
         if (!context || !swap_chain) return;
 
+        const auto& desc = swap_chain->GetDesc();
+        if (desc.Width == 0 || desc.Height == 0) return;
+
         swap_chain->Present(0);
     }
 
