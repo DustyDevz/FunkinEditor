@@ -9,6 +9,8 @@
 #include "input/input_binding.hpp"
 #include <fstream>
 
+#include "input/input.hpp"
+
 namespace Funkin::Input {
    bool BindingManager::parseRawInput(std::string_view query, KeyCode& outKey, MouseButton& outMouse, ControllerButton& outCtrl) const {
         outKey   = KeyCode::Unknown;
@@ -147,6 +149,28 @@ namespace Funkin::Input {
         }
 
         return false;
+    }
+
+    float BindingManager::get_latency(std::string_view action, const InputState &state, const Input &input) const {
+        auto it = m_bindings.find(action);
+       if (it != m_bindings.end()) {
+            const auto& b = it->second;
+           if (b.useKey)   return input.get_key_latency(b.key);
+           if (b.useCtrl)  return input.get_controller_latency(b.ctrlBtn);
+           if (b.useMouse) return input.get_mouse_latency(b.mouseBtn);
+       }
+
+       KeyCode key;
+       MouseButton mouse_button;
+       ControllerButton controller_button;
+
+       if (parseRawInput(action, key, mouse_button, controller_button)) {
+           if (key != KeyCode::Unknown)                      return input.get_key_latency(key);
+           if (mouse_button != MouseButton::COUNT)           return input.get_mouse_latency(mouse_button);
+           if (controller_button != ControllerButton::COUNT) return input.get_controller_latency(controller_button);
+       }
+
+       return .0f;
     }
 
     uint64_t BindingManager::getLastTimestamp(std::string_view action, const InputState& state) const {

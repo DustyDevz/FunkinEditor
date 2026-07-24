@@ -45,6 +45,12 @@ namespace Funkin::Input {
         float axis(uint8_t controller, ControllerAxis a) const;
         const std::vector<InputEvent>& frameEvents() const { return m_state.frameEvents; }
 
+        float get_latency(uint64_t event_time_stamp) const;
+        float get_key_latency(KeyCode key_code) const;
+        float get_mouse_latency(MouseButton mouse_button) const;
+        float get_controller_latency(ControllerButton controller_button, uint8_t controller = 0) const;
+        float get_controller_axis_latency(ControllerAxis axis, uint8_t controller = 0) const;
+
         BindingManager& bindings() { return m_bindingManager; }
 
         void setDeadZone(ControllerAxis axis, DeadZone dz);

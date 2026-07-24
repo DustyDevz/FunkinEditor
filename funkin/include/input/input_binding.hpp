@@ -15,6 +15,8 @@
 #include "input_state.hpp"
 
 namespace Funkin::Input {
+    class Input;
+
     struct StringHash {
         using is_transparent = void;
         size_t operator()(std::string_view sv) const {
@@ -49,6 +51,8 @@ namespace Funkin::Input {
         void saveBindings(const std::string& path) const;
 
         [[nodiscard]] const Binding* getBinding(std::string_view action) const;
+
+        float get_latency(std::string_view action, const InputState& state, const Input& input) const;
 
     private:
         bool parseRawInput(std::string_view query, KeyCode& outKey, MouseButton& outMouse, ControllerButton& outCtrl) const;

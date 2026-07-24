@@ -139,7 +139,7 @@ namespace Funkin {
         input.update();
 
         if (input.justDown(Input::KeyCode::G)) {
-            LOG_PRINT("G pressed! :3");
+            LOG_PRINT("G pressed! :3, latency :) {}", input.get_key_latency(Input::KeyCode::G));
         }
     }
 

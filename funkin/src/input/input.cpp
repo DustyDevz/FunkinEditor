@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <string_view>
 
+#include "../../libs/diligent/DiligentTools/ThirdParty/libtiff/tiff.h"
+
 namespace Funkin::Input {
     static const char* s_keyNames[static_cast<size_t>(KeyCode::COUNT)] = {
         "Unknown",
@@ -79,6 +81,41 @@ namespace Funkin::Input {
         return m_deadZones[static_cast<size_t>(axis)];
     }
 
+    float Input::get_latency(uint64_t event_time_stamp) const {
+        if (event_time_stamp == 0) return .0f;
+
+        uint64_t now = getNow();
+        uint64_t diff = (now >= event_time_stamp) ? (now - event_time_stamp) : 0;
+        return static_cast<float>(diff) / 1'000'000.f;
+    }
+
+    float Input::get_key_latency(KeyCode key_code) const {
+        size_t k = static_cast<size_t>(key_code);
+        return (k < static_cast<size_t>(KeyCode::COUNT)) ? get_latency(m_state.keyJustDownTime[k]) : .0f;
+    }
+
+    float Input::get_mouse_latency(MouseButton mouse_button) const {
+        size_t b = static_cast<size_t>(mouse_button);
+        return (b < static_cast<size_t>(MouseButton::COUNT)) ? get_latency(m_state.mouseJustDownTime[b]) : .0f;
+    }
+
+    float Input::get_controller_latency(ControllerButton controller_button, uint8_t controller) const {
+        if (controller >= 4) return 0.0f;
+
+        size_t b = static_cast<size_t>(controller_button);
+        return (b < static_cast<size_t>(ControllerButton::COUNT))
+            ? get_latency(m_state.controllers[controller].justDownTime[b])
+            : .0f;
+    }
+
+    float Input::get_controller_axis_latency(ControllerAxis axis, uint8_t controller) const {
+        if (controller >= 4) return .0f;
+
+        size_t a = static_cast<size_t>(axis);
+        return (a < static_cast<size_t>(ControllerAxis::COUNT))
+        ? get_latency(m_state.controllers[controller].axes[a].lastUpdateTime) : .0f;
+    }
+
     float Input::axis(uint8_t controller, ControllerAxis a) const {
         if (controller >= 4) return 0.0f;
         return m_state.controllers[controller].axes[static_cast<size_t>(a)].processed;
@@ -139,7 +176,7 @@ namespace Funkin::Input {
         m_ring.push(e);
     }
 
-    void Input::update() {
+   void Input::update() {
         m_state.keysJustDown.fill(false);
         m_state.keysJustUp.fill(false);
         m_state.mouseJustDown.fill(false);
@@ -162,7 +199,10 @@ namespace Funkin::Input {
             switch (e.type) {
                 case InputEventType::KeyDown: {
                     size_t k = static_cast<size_t>(e.key.key);
-                    if (!m_state.keys[k]) m_state.keysJustDown[k] = true;
+                    if (!m_state.keys[k]) {
+                        m_state.keysJustDown[k] = true;
+                        m_state.keyJustDownTime[k] = e.time;
+                    }
                     m_state.keys[k] = true;
                     break;
                 }
@@ -172,17 +212,13 @@ namespace Funkin::Input {
                     m_state.keysJustUp[k] = true;
                     break;
                 }
-                case InputEventType::MouseMove:
-                    m_state.mouseDX += e.mouseMove.x;
-                    m_state.mouseDY += e.mouseMove.y;
-                    m_state.mouseX  += e.mouseMove.x;
-                    m_state.mouseY  += e.mouseMove.y;
-                    break;
-
                 case InputEventType::MouseDown: {
                     size_t b = static_cast<size_t>(e.mouseButton.btn);
-                    m_state.mouseButtons[b]  = true;
-                    m_state.mouseJustDown[b] = true;
+                    if (!m_state.mouseButtons[b]) {
+                        m_state.mouseJustDown[b] = true;
+                        m_state.mouseJustDownTime[b] = e.time;
+                    }
+                    m_state.mouseButtons[b] = true;
                     break;
                 }
                 case InputEventType::MouseUp: {
@@ -191,16 +227,14 @@ namespace Funkin::Input {
                     m_state.mouseJustUp[b]  = true;
                     break;
                 }
-                case InputEventType::MouseScroll:
-                    m_state.scrollX += e.mouseScroll.dx;
-                    m_state.scrollY += e.mouseScroll.dy;
-                    break;
-
                 case InputEventType::ControllerButtonDown: {
                     auto& ctrl = m_state.controllers[e.ctrlBtn.id];
                     size_t b = static_cast<size_t>(e.ctrlBtn.btn);
-                    ctrl.buttons[b]  = true;
-                    ctrl.justDown[b] = true;
+                    if (!ctrl.buttons[b]) {
+                        ctrl.justDown[b] = true;
+                        ctrl.justDownTime[b] = e.time;
+                    }
+                    ctrl.buttons[b] = true;
                     break;
                 }
                 case InputEventType::ControllerButtonUp: {
@@ -213,18 +247,11 @@ namespace Funkin::Input {
                 case InputEventType::ControllerAxis: {
                     auto& ctrl = m_state.controllers[e.ctrlAxis.id];
                     size_t a   = static_cast<size_t>(e.ctrlAxis.axis);
-                    ctrl.axes[a].raw       = e.ctrlAxis.value;
-                    ctrl.axes[a].processed = m_deadZones[a].apply(e.ctrlAxis.value);
+                    ctrl.axes[a].raw            = e.ctrlAxis.value;
+                    ctrl.axes[a].processed      = m_deadZones[a].apply(e.ctrlAxis.value);
+                    ctrl.axes[a].lastUpdateTime = e.time;
                     break;
                 }
-                case InputEventType::ControllerConnected:
-                    m_state.controllers[e.ctrlConnect.id].connected = true;
-                    break;
-
-                case InputEventType::ControllerDisconnected:
-                    m_state.controllers[e.ctrlConnect.id].connected = false;
-                    break;
-
                 default: break;
             }
         }
