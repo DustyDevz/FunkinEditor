@@ -9,16 +9,10 @@
 #pragma once
 #include <QGuiApplication>
 #include <QWindow>
-#include <QEvent>
-#include <QKeyEvent>
-#include <QMouseEvent>
-#include <QWheelEvent>
-#include <memory>
 #include <chrono>
 
 #include "render/graphics/graphics_context.hpp"
 #include "render/graphics/graphics_device.hpp"
-#include "input/input.hpp"
 
 namespace Funkin {
     class MainWindow : public QWindow {

@@ -7,6 +7,7 @@
 */
 
 #include "app/app.hpp"
+#include "input/input.hpp"
 #include "utils/log.hpp"
 
 namespace Funkin {

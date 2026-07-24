@@ -8,6 +8,7 @@
 
 #pragma once
 #include <cstdint>
+#include <string_view>
 
 namespace Funkin::Input {
     using Timestamp = uint64_t;
@@ -85,5 +86,5 @@ namespace Funkin::Input {
     };
 
     const char* keyCodeName(KeyCode k);
-    KeyCode     keyCodeFromName(const char* name);
+    KeyCode     keyCodeFromName(std::string_view name);
 }

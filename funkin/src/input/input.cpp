@@ -8,6 +8,8 @@
 
 #include "input/input.hpp"
 #include "input/input_map.hpp"
+#include <unordered_map>
+#include <string_view>
 
 namespace Funkin::Input {
     static const char* s_keyNames[static_cast<size_t>(KeyCode::COUNT)] = {
@@ -34,12 +36,18 @@ namespace Funkin::Input {
         return s_keyNames[idx];
     }
 
-    KeyCode keyCodeFromName(const char* name) {
-        for (size_t i = 0; i < static_cast<size_t>(KeyCode::COUNT); ++i) {
-            if (strcmp(s_keyNames[i], name) == 0)
-                return static_cast<KeyCode>(i);
-        }
-        return KeyCode::Unknown;
+    KeyCode keyCodeFromName(std::string_view name) {
+        static const auto keyTable = []() {
+            std::unordered_map<std::string_view, KeyCode> map;
+            map.reserve(static_cast<size_t>(KeyCode::COUNT));
+            for (size_t i = 0; i < static_cast<size_t>(KeyCode::COUNT); ++i) {
+                map[s_keyNames[i]] = static_cast<KeyCode>(i);
+            }
+            return map;
+        }();
+
+        auto it = keyTable.find(name);
+        return (it != keyTable.end()) ? it->second : KeyCode::Unknown;
     }
 
     Input& Input::instance() {
@@ -52,6 +60,7 @@ namespace Funkin::Input {
             dz.inner = 0.15f;
             dz.outer = 0.95f;
         }
+        m_state.frameEvents.reserve(64);
         m_startTime = std::chrono::high_resolution_clock::now();
     }
 

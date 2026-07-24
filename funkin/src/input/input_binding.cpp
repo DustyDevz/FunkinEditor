@@ -10,16 +10,16 @@
 #include <fstream>
 
 namespace Funkin::Input {
-   bool BindingManager::parseRawInput(const std::string& query, KeyCode& outKey, MouseButton& outMouse, ControllerButton& outCtrl) const {
+   bool BindingManager::parseRawInput(std::string_view query, KeyCode& outKey, MouseButton& outMouse, ControllerButton& outCtrl) const {
         outKey   = KeyCode::Unknown;
         outMouse = MouseButton::COUNT;
         outCtrl  = ControllerButton::COUNT;
 
-        std::string prefix;
-        std::string name = query;
+        std::string_view prefix;
+        std::string_view name = query;
 
         auto colonPos = query.find(':');
-        if (colonPos != std::string::npos) {
+        if (colonPos != std::string_view::npos) {
             prefix = query.substr(0, colonPos);
             name   = query.substr(colonPos + 1);
         }
@@ -49,7 +49,7 @@ namespace Funkin::Input {
             return outCtrl != ControllerButton::COUNT;
         }
 
-        KeyCode k = keyCodeFromName(name.c_str());
+        KeyCode k = keyCodeFromName(name);
         if (k != KeyCode::Unknown) {
             outKey = k;
             return true;
@@ -83,7 +83,7 @@ namespace Funkin::Input {
         m_bindings.erase(action);
     }
 
-    bool BindingManager::isDown(const std::string& action, const InputState& state) const {
+    bool BindingManager::isDown(std::string_view action, const InputState& state) const {
         auto it = m_bindings.find(action);
         if (it != m_bindings.end()) {
             const auto& b = it->second;
@@ -105,7 +105,7 @@ namespace Funkin::Input {
         return false;
     }
 
-    bool BindingManager::justDown(const std::string& action, const InputState& state) const {
+    bool BindingManager::justDown(std::string_view action, const InputState& state) const {
         auto it = m_bindings.find(action);
         if (it != m_bindings.end()) {
             const auto& b = it->second;
@@ -127,7 +127,7 @@ namespace Funkin::Input {
         return false;
     }
 
-    bool BindingManager::justUp(const std::string& action, const InputState& state) const {
+    bool BindingManager::justUp(std::string_view action, const InputState& state) const {
         auto it = m_bindings.find(action);
         if (it != m_bindings.end()) {
             const auto& b = it->second;
@@ -149,7 +149,7 @@ namespace Funkin::Input {
         return false;
     }
 
-    uint64_t BindingManager::getLastTimestamp(const std::string& action, const InputState& state) const {
+    uint64_t BindingManager::getLastTimestamp(std::string_view action, const InputState& state) const {
         KeyCode targetKey = KeyCode::Unknown;
 
         auto it = m_bindings.find(action);
@@ -171,7 +171,7 @@ namespace Funkin::Input {
         return latest;
     }
 
-    const Binding* BindingManager::getBinding(const std::string& action) const {
+    const Binding* BindingManager::getBinding(std::string_view action) const {
         auto it = m_bindings.find(action);
         return it != m_bindings.end() ? &it->second : nullptr;
     }

@@ -9,6 +9,10 @@ FunkinC++ Engine
 #include "app/app.hpp"
 #include "utils/log.hpp"
 
+// ! DO NOT PUT JUNK INTO MAIN ! \\
+// ! DO NOT PUT JUNK INTO MAIN ! \\
+// ! DO NOT PUT JUNK INTO MAIN ! \\
+
 int main(int argc, char* argv[]) {
     Funkin::App app(argc, argv);
 

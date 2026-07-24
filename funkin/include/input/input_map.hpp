@@ -7,7 +7,6 @@
 */
 
 #pragma once
-#include <QMouseEvent>
 #include "input_types.hpp"
 
 namespace Funkin::Input {

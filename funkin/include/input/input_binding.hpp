@@ -8,11 +8,20 @@
 
 #pragma once
 #include <string>
+#include <string_view>
 #include <unordered_map>
+
 #include "input_types.hpp"
 #include "input_state.hpp"
 
 namespace Funkin::Input {
+    struct StringHash {
+        using is_transparent = void;
+        size_t operator()(std::string_view sv) const {
+            return std::hash<std::string_view>{}(sv);
+        }
+    };
+
     struct Binding {
         std::string      action;
         KeyCode          key      = KeyCode::Unknown;
@@ -30,20 +39,20 @@ namespace Funkin::Input {
         void bind(const std::string& action, MouseButton btn);
         void unbind(const std::string& action);
 
-        bool isDown(const std::string& action, const InputState& state) const;
-        bool justDown(const std::string& action, const InputState& state) const;
-        bool justUp(const std::string& action, const InputState& state) const;
+        [[nodiscard]] bool isDown(std::string_view action, const InputState& state) const;
+        [[nodiscard]] bool justDown(std::string_view action, const InputState& state) const;
+        [[nodiscard]] bool justUp(std::string_view action, const InputState& state) const;
 
-        uint64_t getLastTimestamp(const std::string& action, const InputState& state) const;
+        [[nodiscard]] uint64_t getLastTimestamp(std::string_view action, const InputState& state) const;
 
         void loadBindings(const std::string& path);
         void saveBindings(const std::string& path) const;
 
-        const Binding* getBinding(const std::string& action) const;
+        [[nodiscard]] const Binding* getBinding(std::string_view action) const;
 
     private:
-        bool parseRawInput(const std::string& query, KeyCode& outKey, MouseButton& outMouse, ControllerButton& outCtrl) const;
+        bool parseRawInput(std::string_view query, KeyCode& outKey, MouseButton& outMouse, ControllerButton& outCtrl) const;
 
-        std::unordered_map<std::string, Binding> m_bindings;
+        std::unordered_map<std::string, Binding, StringHash, std::equal_to<>> m_bindings;
     };
 }

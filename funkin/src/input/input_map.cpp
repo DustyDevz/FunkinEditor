@@ -5,7 +5,9 @@
  This program is licensed under the GNU Affero General Public License v3.0 and is distributed WITHOUT ANY WARRANTY.
  For a copy, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 */
+
 #include "input/input_map.hpp"
+#include <unordered_map>
 
 namespace Funkin::Input {
     KeyCode QtKeyMap::mapQtKey(int qtKey, std::uint32_t nativeScanCode) {
@@ -16,55 +18,32 @@ namespace Funkin::Input {
             if (qtKey == Qt::Key_0) return KeyCode::Num0;
             return static_cast<KeyCode>(static_cast<uint32_t>(KeyCode::Num1) + (qtKey - Qt::Key_1));
         }
-
-        switch (qtKey) {
-            case Qt::Key_Up:         return KeyCode::Up;
-            case Qt::Key_Down:       return KeyCode::Down;
-            case Qt::Key_Left:       return KeyCode::Left;
-            case Qt::Key_Right:      return KeyCode::Right;
-            case Qt::Key_Return:
-            case Qt::Key_Enter:      return KeyCode::Enter;
-            case Qt::Key_Escape:     return KeyCode::Escape;
-            case Qt::Key_Space:      return KeyCode::Space;
-            case Qt::Key_Tab:        return KeyCode::Tab;
-            case Qt::Key_Backspace:  return KeyCode::Backspace;
-            case Qt::Key_Shift:      return KeyCode::LShift;
-            case Qt::Key_Control:    return KeyCode::LCtrl;
-            case Qt::Key_Alt:        return KeyCode::LAlt;
-            case Qt::Key_Meta:       return KeyCode::LSuper;
-            case Qt::Key_CapsLock:   return KeyCode::CapsLock;
-            case Qt::Key_Delete:     return KeyCode::Delete;
-            case Qt::Key_Insert:     return KeyCode::Insert;
-            case Qt::Key_Home:       return KeyCode::Home;
-            case Qt::Key_End:        return KeyCode::End;
-            case Qt::Key_PageUp:     return KeyCode::PageUp;
-            case Qt::Key_PageDown:   return KeyCode::PageDown;
-            case Qt::Key_F1:         return KeyCode::F1;
-            case Qt::Key_F2:         return KeyCode::F2;
-            case Qt::Key_F3:         return KeyCode::F3;
-            case Qt::Key_F4:         return KeyCode::F4;
-            case Qt::Key_F5:         return KeyCode::F5;
-            case Qt::Key_F6:         return KeyCode::F6;
-            case Qt::Key_F7:         return KeyCode::F7;
-            case Qt::Key_F8:         return KeyCode::F8;
-            case Qt::Key_F9:         return KeyCode::F9;
-            case Qt::Key_F10:        return KeyCode::F10;
-            case Qt::Key_F11:        return KeyCode::F11;
-            case Qt::Key_F12:        return KeyCode::F12;
-            case Qt::Key_Comma:      return KeyCode::Comma;
-            case Qt::Key_Period:     return KeyCode::Period;
-            case Qt::Key_Slash:      return KeyCode::Slash;
-            case Qt::Key_Backslash:  return KeyCode::Backslash;
-            case Qt::Key_Semicolon:  return KeyCode::Semicolon;
-            case Qt::Key_Apostrophe: return KeyCode::Apostrophe;
-            case Qt::Key_AsciiTilde:
-            case Qt::Key_QuoteLeft:  return KeyCode::Grave;
-            case Qt::Key_BracketLeft:  return KeyCode::LBracket;
-            case Qt::Key_BracketRight: return KeyCode::RBracket;
-            case Qt::Key_Minus:      return KeyCode::Minus;
-            case Qt::Key_Equal:      return KeyCode::Equal;
-            default:                 return KeyCode::Unknown;
+        if (qtKey >= Qt::Key_F1 && qtKey <= Qt::Key_F12) {
+            return static_cast<KeyCode>(static_cast<uint32_t>(KeyCode::F1) + (qtKey - Qt::Key_F1));
         }
+
+        static const std::unordered_map<int, KeyCode> qtLookup = {
+            { Qt::Key_Up, KeyCode::Up }, { Qt::Key_Down, KeyCode::Down },
+            { Qt::Key_Left, KeyCode::Left }, { Qt::Key_Right, KeyCode::Right },
+            { Qt::Key_Return, KeyCode::Enter }, { Qt::Key_Enter, KeyCode::Enter },
+            { Qt::Key_Escape, KeyCode::Escape }, { Qt::Key_Space, KeyCode::Space },
+            { Qt::Key_Tab, KeyCode::Tab }, { Qt::Key_Backspace, KeyCode::Backspace },
+            { Qt::Key_Shift, KeyCode::LShift }, { Qt::Key_Control, KeyCode::LCtrl },
+            { Qt::Key_Alt, KeyCode::LAlt }, { Qt::Key_Meta, KeyCode::LSuper },
+            { Qt::Key_CapsLock, KeyCode::CapsLock }, { Qt::Key_Delete, KeyCode::Delete },
+            { Qt::Key_Insert, KeyCode::Insert }, { Qt::Key_Home, KeyCode::Home },
+            { Qt::Key_End, KeyCode::End }, { Qt::Key_PageUp, KeyCode::PageUp },
+            { Qt::Key_PageDown, KeyCode::PageDown }, { Qt::Key_Comma, KeyCode::Comma },
+            { Qt::Key_Period, KeyCode::Period }, { Qt::Key_Slash, KeyCode::Slash },
+            { Qt::Key_Backslash, KeyCode::Backslash }, { Qt::Key_Semicolon, KeyCode::Semicolon },
+            { Qt::Key_Apostrophe, KeyCode::Apostrophe }, { Qt::Key_AsciiTilde, KeyCode::Grave },
+            { Qt::Key_QuoteLeft, KeyCode::Grave }, { Qt::Key_BracketLeft, KeyCode::LBracket },
+            { Qt::Key_BracketRight, KeyCode::RBracket }, { Qt::Key_Minus, KeyCode::Minus },
+            { Qt::Key_Equal, KeyCode::Equal }
+        };
+
+        auto it = qtLookup.find(qtKey);
+        return (it != qtLookup.end()) ? it->second : KeyCode::Unknown;
     }
 
     MouseButton QtKeyMap::mapQtMouseButton(Qt::MouseButton button) {

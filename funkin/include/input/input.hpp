@@ -9,10 +9,6 @@
 #pragma once
 #include <chrono>
 #include <QWindow>
-#include <QEvent>
-#include <QKeyEvent>
-#include <QMouseEvent>
-#include <QWheelEvent>
 
 #include "input_types.hpp"
 #include "input_ring_buffer.hpp"
